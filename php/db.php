@@ -1,13 +1,24 @@
 <?php
-class Database {
-    private $db;
-    private static $instance = null;
-    private $dbType;
-    private $inMemory;
 
-    private function __construct($config = null) {
+declare(strict_types=1);
+
+namespace App;
+
+use PDO;
+use PDOException;
+use Exception;
+
+class Database
+{
+    private PDO $db;
+    private static ?Database $instance = null;
+    private string $dbType;
+    private bool $inMemory;
+
+    private function __construct(?array $config = null)
+    {
         $this->inMemory = false;
-        
+
         try {
             if ($config && isset($config['type']) && $config['type'] === 'postgres') {
                 $this->dbType = 'postgres';
@@ -32,21 +43,23 @@ class Database {
                 }
                 $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             }
-            
+
             $this->createTables();
         } catch (PDOException $e) {
             throw new Exception('Database connection failed: ' . $e->getMessage());
         }
     }
 
-    public static function getInstance($config = null) {
+    public static function getInstance(?array $config = null): Database
+    {
         if (self::$instance === null) {
             self::$instance = new self($config);
         }
         return self::$instance;
     }
 
-    private function createTables() {
+    private function createTables(): void
+    {
         if ($this->dbType === 'postgres') {
             // PostgreSQL tables
             $this->db->exec('
@@ -63,8 +76,8 @@ class Database {
                     id SERIAL PRIMARY KEY,
                     program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE,
                     name VARCHAR(255) NOT NULL,
-                    semester INTEGER NOT NULL,
-                    credits INTEGER NOT NULL,
+                    semester INTEGER NOT NULL CHECK (semester BETWEEN 1 AND 8),
+                    credits INTEGER NOT NULL CHECK (credits > 0),
                     type VARCHAR(50) NOT NULL
                 )
             ');
@@ -74,7 +87,8 @@ class Database {
                     id SERIAL PRIMARY KEY,
                     program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE,
                     course_from VARCHAR(255) NOT NULL,
-                    course_to VARCHAR(255) NOT NULL
+                    course_to VARCHAR(255) NOT NULL,
+                    UNIQUE(program_id, course_from, course_to)
                 )
             ');
         } else {
@@ -93,8 +107,8 @@ class Database {
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     program_id INTEGER,
                     name TEXT NOT NULL,
-                    semester INTEGER NOT NULL,
-                    credits INTEGER NOT NULL,
+                    semester INTEGER NOT NULL CHECK (semester BETWEEN 1 AND 8),
+                    credits INTEGER NOT NULL CHECK (credits > 0),
                     type TEXT NOT NULL,
                     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
                 )
@@ -106,34 +120,40 @@ class Database {
                     program_id INTEGER,
                     course_from TEXT NOT NULL,
                     course_to TEXT NOT NULL,
+                    UNIQUE(program_id, course_from, course_to),
                     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
                 )
             ');
         }
     }
 
-    public function getConnection() {
+    public function getConnection(): PDO
+    {
         return $this->db;
     }
 
-    public function beginTransaction() {
+    public function beginTransaction(): void
+    {
         $this->db->beginTransaction();
     }
 
-    public function commit() {
+    public function commit(): void
+    {
         $this->db->commit();
     }
 
-    public function rollback() {
+    public function rollback(): void
+    {
         $this->db->rollBack();
     }
 
-    public function isInMemory() {
+    public function isInMemory(): bool
+    {
         return $this->inMemory;
     }
 
-    public function getDbType() {
+    public function getDbType(): string
+    {
         return $this->dbType;
     }
 }
-?> 

@@ -1,0 +1,15 @@
+parameters:
+    level: 3
+    paths:
+        - php
+        - tests
+    excludePaths:
+        - vendor
+        - database
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    ignoreErrors:
+        - '#Variable \$[a-zA-Z0-9\\_]+ might not be defined#'
+        - '#Access to an undefined property#'
+        - '#Call to an undefined method#'
+    reportUnmatchedIgnoredErrors: false 

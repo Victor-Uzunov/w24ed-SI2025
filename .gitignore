@@ -19,7 +19,11 @@ composer.phar
 
 # Environment and configuration
 .env
+.env.local
+.env.*.local
+!.env.example
 config.php
+config.local.php
 
 # OS generated files
 .DS_Store
@@ -30,6 +34,9 @@ config.php
 ehthumbs.db
 Thumbs.db
 
-# Logs
+# Logs and reports
 *.log
-/logs/ 
+/logs/
+/coverage/
+/build/
+/reports/ 

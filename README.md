@@ -75,6 +75,25 @@ php -S localhost:8000
 http://localhost:8000
 ```
 
+## Development
+
+### Code Quality
+The project uses several tools to maintain code quality:
+- PHP_CodeSniffer for PSR-12 compliance
+- PHPStan for static analysis
+- PHPUnit for testing
+
+Run quality checks locally:
+```bash
+composer build    # Runs all checks
+composer cs      # Code style only
+composer phpstan # Static analysis only
+composer test    # Unit tests only
+```
+
+### CI/CD Pipeline
+The project uses GitHub Actions for continuous integration and deployment. For detailed information about the pipeline, see [CI/CD Documentation](docs/CI_CD.md).
+
 ## Database Configuration
 
 The application supports two database modes:
