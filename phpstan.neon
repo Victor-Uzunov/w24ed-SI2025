@@ -1,0 +1,10 @@
+parameters:
+    level: 5
+    paths:
+        - php
+        - tests
+    excludePaths:
+        - vendor
+        - database
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false 

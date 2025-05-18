@@ -1,0 +1,87 @@
+name: PHP CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'
+        extensions: pdo, json
+        coverage: xdebug
+        tools: composer:v2, cs2pr
+
+    - name: Validate composer.json
+      run: composer validate --strict
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Check coding standards
+      run: composer cs || true # Don't fail the build, just report
+      
+    - name: Run static analysis
+      run: composer phpstan || true # Don't fail the build, just report
+
+    - name: Create artifacts directory
+      run: mkdir -p build/artifacts
+
+    - name: Archive code standard results
+      uses: actions/upload-artifact@v2
+      with:
+        name: code-standard-results
+        path: build/artifacts
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'
+        extensions: pdo, json
+        coverage: xdebug
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Create Database Directory
+      run: mkdir -p database
+
+    - name: Run test suite
+      run: composer test
+
+    - name: Generate code coverage report
+      run: composer test-coverage
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage-report
+        path: coverage/ 
