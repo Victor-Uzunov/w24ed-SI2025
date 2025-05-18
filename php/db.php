@@ -8,15 +8,17 @@ use PDO;
 use PDOException;
 use Exception;
 
-class Database {
+class Database
+{
     private PDO $db;
     private static ?Database $instance = null;
     private string $dbType;
     private bool $inMemory;
 
-    private function __construct(?array $config = null) {
+    private function __construct(?array $config = null)
+    {
         $this->inMemory = false;
-        
+
         try {
             if ($config && isset($config['type']) && $config['type'] === 'postgres') {
                 $this->dbType = 'postgres';
@@ -41,7 +43,7 @@ class Database {
                 }
                 $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             }
-            
+
             $this->createTables();
         } catch (PDOException $e) {
             throw new Exception('Database connection failed: ' . $e->getMessage());
@@ -155,4 +157,3 @@ class Database {
         return $this->dbType;
     }
 }
-?> 

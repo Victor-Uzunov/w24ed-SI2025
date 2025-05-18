@@ -1,35 +1,29 @@
 <?php
+
 header('Content-Type: application/json');
 require_once 'db.php';
-
 try {
-    // Get JSON input
+// Get JSON input
     $input = json_decode(file_get_contents('php://input'), true);
-    
     if (!$input) {
         throw new Exception('Invalid input data');
     }
 
     $db = Database::getInstance();
     $conn = $db->getConnection();
-    
     $db->beginTransaction();
-
     try {
-        // Insert program
+    // Insert program
         $stmt = $conn->prepare('INSERT INTO programs (name, type) VALUES (:name, :type)');
         $stmt->bindValue(':name', $input['name'], SQLITE3_TEXT);
         $stmt->bindValue(':type', $input['type'], SQLITE3_TEXT);
         $stmt->execute();
-        
         $programId = $conn->lastInsertRowID();
-
-        // Insert courses
+    // Insert courses
         $stmt = $conn->prepare('
             INSERT INTO courses (program_id, name, semester, credits, type) 
             VALUES (:program_id, :name, :semester, :credits, :type)
         ');
-
         foreach ($input['courses'] as $course) {
             $stmt->bindValue(':program_id', $programId, SQLITE3_INTEGER);
             $stmt->bindValue(':name', $course['name'], SQLITE3_TEXT);
@@ -45,7 +39,6 @@ try {
                 INSERT INTO dependencies (program_id, course_from, course_to) 
                 VALUES (:program_id, :course_from, :course_to)
             ');
-
             foreach ($input['dependencies'] as $dep) {
                 $stmt->bindValue(':program_id', $programId, SQLITE3_INTEGER);
                 $stmt->bindValue(':course_from', $dep['from'], SQLITE3_TEXT);
@@ -55,7 +48,6 @@ try {
         }
 
         $db->commit();
-        
         echo json_encode([
             'success' => true,
             'message' => 'Program saved successfully',
@@ -71,4 +63,3 @@ try {
         'message' => $e->getMessage()
     ]);
 }
-?> 

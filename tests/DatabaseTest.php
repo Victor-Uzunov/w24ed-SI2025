@@ -35,18 +35,18 @@ class DatabaseTest extends TestCase
     {
         $this->db->beginTransaction();
         $connection = $this->db->getConnection();
-        
+
         $stmt = $connection->prepare("INSERT INTO programs (name, type) VALUES (?, ?)");
         $result = $stmt->execute(['Test Program', 'Bachelor']);
-        
+
         $this->assertTrue($result);
         $this->db->commit();
 
         $stmt = $connection->query("SELECT * FROM programs WHERE name = 'Test Program'");
         $program = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         $this->assertNotNull($program);
         $this->assertEquals('Test Program', $program['name']);
         $this->assertEquals('Bachelor', $program['type']);
     }
-} 
+}

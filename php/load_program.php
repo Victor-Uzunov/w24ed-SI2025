@@ -1,21 +1,18 @@
 <?php
+
 header('Content-Type: application/json');
 require_once 'db.php';
-
 try {
     $db = Database::getInstance();
     $conn = $db->getConnection();
-    
-    // Get the latest program (we can extend this later to load specific programs)
+// Get the latest program (we can extend this later to load specific programs)
     $result = $conn->query('
         SELECT id, name, type 
         FROM programs 
         ORDER BY created_at DESC 
         LIMIT 1
     ');
-    
     $program = $result->fetchArray(SQLITE3_ASSOC);
-    
     if (!$program) {
         throw new Exception('No program found');
     }
@@ -28,7 +25,6 @@ try {
     ');
     $stmt->bindValue(':program_id', $program['id'], SQLITE3_INTEGER);
     $result = $stmt->execute();
-
     $courses = [];
     while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
         $courses[] = $row;
@@ -42,7 +38,6 @@ try {
     ');
     $stmt->bindValue(':program_id', $program['id'], SQLITE3_INTEGER);
     $result = $stmt->execute();
-
     $dependencies = [];
     while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
         $dependencies[] = [
@@ -66,4 +61,3 @@ try {
         'message' => $e->getMessage()
     ]);
 }
-?> 
