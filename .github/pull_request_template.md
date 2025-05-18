@@ -10,12 +10,6 @@
 - [ ] Documentation
 - [ ] Other (please describe):
 
-## Testing Done
-<!-- Describe how you tested your changes -->
-
-## Screenshots
-<!-- If applicable, add screenshots to demonstrate your changes -->
-
 ## Checklist
 - [ ] I have tested my changes thoroughly
 - [ ] My code follows the project's style guidelines
