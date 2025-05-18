@@ -1,0 +1,35 @@
+# Composer
+/vendor/
+composer.phar
+
+# PHP
+.phpunit.result.cache
+
+# Database
+/database/*.db
+/database/*.sqlite
+/database/*.sqlite3
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment and configuration
+.env
+config.php
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+/logs/ 
