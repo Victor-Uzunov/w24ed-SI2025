@@ -8,13 +8,15 @@ on:
 
 permissions:
   contents: read
+  checks: write # Required for code quality annotations
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -40,26 +42,30 @@ jobs:
       run: composer install --prefer-dist --no-progress
 
     - name: Check coding standards
-      run: composer cs || true # Don't fail the build, just report
-      
+      continue-on-error: true # Don't fail the build, just report
+      run: |
+        mkdir -p build/reports
+        composer cs > build/reports/phpcs.txt
+
     - name: Run static analysis
-      run: composer phpstan || true # Don't fail the build, just report
+      continue-on-error: true # Don't fail the build, just report
+      run: |
+        composer phpstan > build/reports/phpstan.txt
 
-    - name: Create artifacts directory
-      run: mkdir -p build/artifacts
-
-    - name: Archive code standard results
-      uses: actions/upload-artifact@v2
+    - name: Upload build reports
+      uses: actions/upload-artifact@v3 # Updated to v3
       with:
-        name: code-standard-results
-        path: build/artifacts
+        name: build-reports
+        path: build/reports/
+        retention-days: 7
 
   test:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -81,7 +87,8 @@ jobs:
       run: composer test-coverage
 
     - name: Upload coverage report
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3 # Updated to v3
       with:
         name: coverage-report
-        path: coverage/ 
+        path: coverage/
+        retention-days: 7 
