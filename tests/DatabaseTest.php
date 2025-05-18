@@ -1,10 +1,14 @@
 <?php
 
+namespace Tests;
+
 use PHPUnit\Framework\TestCase;
+use App\Database;
+use PDO;
 
 class DatabaseTest extends TestCase
 {
-    private $db;
+    private Database $db;
 
     protected function setUp(): void
     {
