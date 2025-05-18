@@ -1,0 +1,14 @@
+{
+    "name": "fmi/course-program-editor",
+    "description": "FMI Course Program Editor and Dependency Visualizer",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "tecnickcom/tcpdf": "^6.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "php/"
+        }
+    }
+} 
