@@ -14,8 +14,4 @@
 - [ ] I have tested my changes thoroughly
 - [ ] My code follows the project's style guidelines
 - [ ] I have updated the documentation (if needed)
-- [ ] I have tested with both SQLite and PostgreSQL (if making database changes)
 
-## Related Issues
-<!-- Link any related issues using #issue-number -->
-Closes # 
