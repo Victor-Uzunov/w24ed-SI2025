@@ -3,7 +3,6 @@ class ProgramEditor {
         this.initializeElements();
         this.bindEvents();
         this.courses = [];
-        this.dependencies = [];
         this.isDirty = false;
         this.showWelcomeMessage();
     }
@@ -129,7 +128,7 @@ class ProgramEditor {
     }
 
     validateProgram() {
-        const name = document.getElementById('programName').value;
+        const name = document.getElementById('programName').value.trim();
         if (!name) {
             throw new Error('Моля, въведете име на програмата');
         }
@@ -138,23 +137,12 @@ class ProgramEditor {
             throw new Error('Моля, добавете поне една дисциплина');
         }
 
-        this.courses.forEach(course => {
-            if (!course.name) {
-                throw new Error('Всички дисциплини трябва да имат име');
+        this.courses.forEach((course, index) => {
+            if (!course.name || course.name.trim() === '') {
+                throw new Error(`Дисциплина #${index + 1} няма въведено име`);
             }
-            if (!course.credits || course.credits < 0) {
-                throw new Error(`Дисциплината "${course.name}" трябва да има валиден брой кредити`);
-            }
-        });
-
-        // Validate dependencies
-        const courseNames = new Set(this.courses.map(c => c.name));
-        this.dependencies.forEach(dep => {
-            if (!courseNames.has(dep.from)) {
-                throw new Error(`Невалидна зависимост: дисциплината "${dep.from}" не съществува`);
-            }
-            if (!courseNames.has(dep.to)) {
-                throw new Error(`Невалидна зависимост: дисциплината "${dep.to}" не съществува`);
+            if (!course.credits || course.credits < 1 || course.credits > 30) {
+                throw new Error(`Дисциплината "${course.name || `#${index + 1}`}" трябва да има валиден брой кредити (1-30)`);
             }
         });
     }
@@ -165,10 +153,8 @@ class ProgramEditor {
         }
 
         this.courses = [];
-        this.dependencies = [];
         this.programBasicForm.reset();
         this.coursesList.innerHTML = '';
-        this.updateDependencyGraph();
         this.clearDirty();
         this.showMessage('Създадена е нова програма');
     }
@@ -188,10 +174,7 @@ class ProgramEditor {
                 document.getElementById('programType').value = data.program.type;
                 
                 this.courses = data.program.courses;
-                this.dependencies = data.program.dependencies;
-                
                 this.renderCourses();
-                this.updateDependencyGraph();
                 this.clearDirty();
                 this.showMessage('Програмата е заредена успешно');
             } else {
@@ -207,14 +190,19 @@ class ProgramEditor {
 
     async saveProgram() {
         try {
+            console.log('Attempting to save program. Current courses:', this.courses);
+            this.updateCourses(); // Make sure we have the latest data
+            console.log('Courses after update:', this.courses);
+            
             this.validateProgram();
 
             const programData = {
-                name: document.getElementById('programName').value,
+                name: document.getElementById('programName').value.trim(),
                 type: document.getElementById('programType').value,
-                courses: this.courses,
-                dependencies: this.dependencies
+                courses: this.courses
             };
+            
+            console.log('Program data to save:', programData);
 
             this.setLoading(true);
             const response = await fetch('php/save_program.php', {
@@ -253,11 +241,6 @@ class ProgramEditor {
                 const courseElement = e.target.closest('.course-item');
                 const courseName = courseElement.querySelector('.course-name').value;
                 
-                // Remove any dependencies involving this course
-                this.dependencies = this.dependencies.filter(dep => 
-                    dep.from !== courseName && dep.to !== courseName
-                );
-                
                 courseElement.classList.add('fade-out');
                 setTimeout(() => {
                     courseElement.remove();
@@ -281,7 +264,13 @@ class ProgramEditor {
             } else {
                 nameInput.setCustomValidity('');
             }
+            this.updateCourses();  // Update courses array on every name change
             this.setDirty();
+        });
+
+        // Add change event listener for immediate update
+        nameInput.addEventListener('change', () => {
+            this.updateCourses();
         });
 
         // Add credits validation
@@ -297,32 +286,7 @@ class ProgramEditor {
                 creditsInput.setCustomValidity('');
             }
             creditsInput.reportValidity();
-            this.setDirty();
-        });
-
-        // Add semester change validation
-        const semesterSelect = courseItem.querySelector('.course-semester');
-        semesterSelect.addEventListener('change', () => {
-            const courseName = nameInput.value;
-            const newSemester = parseInt(semesterSelect.value);
-            
-            // Check if this would break any dependencies
-            const invalidDeps = this.dependencies.filter(dep => {
-                if (dep.from === courseName) {
-                    const toCourse = this.courses.find(c => c.name === dep.to);
-                    return toCourse && newSemester >= toCourse.semester;
-                }
-                if (dep.to === courseName) {
-                    const fromCourse = this.courses.find(c => c.name === dep.from);
-                    return fromCourse && fromCourse.semester >= newSemester;
-                }
-                return false;
-            });
-
-            if (invalidDeps.length > 0) {
-                this.showMessage('Внимание: Промяната на семестъра може да наруши съществуващи зависимости', 'warning');
-            }
-            
+            this.updateCourses();  // Update courses array on credits change
             this.setDirty();
         });
 
@@ -332,9 +296,6 @@ class ProgramEditor {
         
         // Focus the name input of the new course
         nameInput.focus();
-        
-        // Show help message for creating dependencies
-        this.showMessage('Съвет: Използвайте Shift + клик върху две дисциплини, за да създадете зависимост между тях', 'info');
     }
 
     setLoading(isLoading) {
@@ -383,21 +344,26 @@ class ProgramEditor {
     }
 
     updateCourses() {
-        this.courses = Array.from(this.coursesList.querySelectorAll('.course-item')).map(item => ({
-            name: item.querySelector('.course-name').value,
-            semester: parseInt(item.querySelector('.course-semester').value),
-            credits: parseInt(item.querySelector('.course-credits').value) || 0,
-            type: item.querySelector('.course-type').value
-        }));
-
-        this.updateDependencyGraph();
+        const courseElements = Array.from(this.coursesList.querySelectorAll('.course-item'));
+        console.log('Found course elements:', courseElements.length);
+        
+        this.courses = courseElements.map(item => {
+            const nameInput = item.querySelector('.course-name');
+            const name = nameInput.value.trim();
+            console.log('Course name from input:', name);
+            
+            const course = {
+                name: name,
+                semester: parseInt(item.querySelector('.course-semester').value),
+                credits: parseInt(item.querySelector('.course-credits').value) || 0,
+                type: item.querySelector('.course-type').value
+            };
+            console.log('Created course object:', course);
+            return course;
+        });
+        
+        console.log('Updated courses array:', this.courses);
         this.setDirty();
-    }
-
-    updateDependencyGraph() {
-        if (window.updateGraph) {
-            window.updateGraph(this.courses, this.dependencies);
-        }
     }
 }
 
