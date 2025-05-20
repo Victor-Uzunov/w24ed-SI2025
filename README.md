@@ -13,10 +13,10 @@ A web application for creating and managing university course programs at FMI. T
 
 ### Course Management
 - Course name and basic information
-- Credit allocation
-- Semester assignment
+- Credit allocation (1-30 credits)
+- Semester assignment (1-8)
 - Course type (Mandatory/Optional/Facultative)
-- Prerequisites and dependencies
+- Prerequisites and dependencies with validation
 
 ### Visualization
 - Interactive dependency graph with drag-and-drop support
@@ -30,6 +30,7 @@ A web application for creating and managing university course programs at FMI. T
 - MySQL or SQLite database support
 - Data validation and error handling
 - Transaction support for data integrity
+- Dependency validation to prevent circular references
 
 ## Technical Requirements
 
@@ -90,6 +91,7 @@ The application provides simple REST endpoints for managing program data:
 ### POST /php/save_program.php
 - Saves program data
 - Accepts JSON with program details, courses, and dependencies
+- Validates dependencies and data integrity
 - Returns success/error status
 
 ## Usage
@@ -101,12 +103,14 @@ The application provides simple REST endpoints for managing program data:
 
 2. Add Courses:
    - Click "Добави дисциплина"
-   - Fill in course details
-   - Set semester and credits
+   - Fill in course details (name, semester, credits, type)
+   - Credits must be between 1 and 30
    - Choose course type
 
 3. Manage Dependencies:
    - Hold Shift and click two courses to create a dependency
+   - Dependencies must follow semester order
+   - Circular dependencies are prevented
    - Right-click a dependency line to remove it
    - Drag courses to rearrange the graph
    - Use zoom controls to adjust the view

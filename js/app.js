@@ -288,9 +288,9 @@ class ProgramEditor {
         const creditsInput = courseItem.querySelector('.course-credits');
         creditsInput.addEventListener('input', (e) => {
             const value = parseInt(e.target.value);
-            if (value < 0) {
-                e.target.value = 0;
-                creditsInput.setCustomValidity('Кредитите трябва да са положително число');
+            if (value <= 0) {
+                e.target.value = 1;
+                creditsInput.setCustomValidity('Кредитите трябва да са положително число, по-голямо от 0');
             } else if (value > 30) {
                 creditsInput.setCustomValidity('Кредитите не могат да надвишават 30');
             } else {
