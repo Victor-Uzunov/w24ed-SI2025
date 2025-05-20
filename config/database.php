@@ -13,11 +13,11 @@ return [
         ],
         'mysql' => [
             'type' => 'mysql',
-            'host' => getenv('DB_HOST') ?: 'localhost',
-            'port' => getenv('DB_PORT') ?: '3306',
-            'dbname' => getenv('DB_NAME') ?: 'fmi_courses',
-            'user' => getenv('DB_USER') ?: 'root',
-            'password' => getenv('DB_PASSWORD') ?: '',
+            'host' => 'localhost',  // or 'host.docker.internal' if running app in Docker
+            'port' => '3306',
+            'dbname' => 'fmi_courses',
+            'user' => 'fmi_user',
+            'password' => 'your_password',  // Replace with your actual password
         ],
     ],
 ]; 

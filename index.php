@@ -41,11 +41,6 @@
                     <div id="coursesList"></div>
                     <button id="addCourseBtn">Добави дисциплина</button>
                 </section>
-
-                <section id="dependenciesSection">
-                    <h2>Зависимости между дисциплините</h2>
-                    <div id="dependencyGraph"></div>
-                </section>
             </div>
         </div>
     </main>
@@ -53,8 +48,8 @@
     <!-- Templates -->
     <template id="courseTemplate">
         <div class="course-item">
-            <input type="text" class="course-name" placeholder="Име на дисциплината">
-            <select class="course-semester">
+            <input type="text" class="course-name" placeholder="Име на дисциплината" required>
+            <select class="course-semester" required>
                 <option value="1">Семестър 1</option>
                 <option value="2">Семестър 2</option>
                 <option value="3">Семестър 3</option>
@@ -64,8 +59,8 @@
                 <option value="7">Семестър 7</option>
                 <option value="8">Семестър 8</option>
             </select>
-            <input type="number" class="course-credits" placeholder="Кредити" min="0">
-            <select class="course-type">
+            <input type="number" class="course-credits" placeholder="Кредити" min="1" max="30" required>
+            <select class="course-type" required>
                 <option value="mandatory">Задължителна</option>
                 <option value="optional">Избираема</option>
                 <option value="facultative">Факултативна</option>
@@ -75,6 +70,5 @@
     </template>
 
     <script src="js/app.js"></script>
-    <script src="js/graph.js"></script>
 </body>
 </html> 
