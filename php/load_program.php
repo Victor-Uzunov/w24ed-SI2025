@@ -5,14 +5,14 @@ require_once 'db.php';
 try {
     $db = Database::getInstance();
     $conn = $db->getConnection();
-// Get the latest program (we can extend this later to load specific programs)
+    // Get the latest program (we can extend this later to load specific programs)
     $result = $conn->query('
         SELECT id, name, type 
         FROM programs 
         ORDER BY created_at DESC 
         LIMIT 1
     ');
-    $program = $result->fetchArray(SQLITE3_ASSOC);
+    $program = $result->fetch(PDO::FETCH_ASSOC);
     if (!$program) {
         throw new Exception('No program found');
     }
@@ -23,12 +23,9 @@ try {
         FROM courses 
         WHERE program_id = :program_id
     ');
-    $stmt->bindValue(':program_id', $program['id'], SQLITE3_INTEGER);
-    $result = $stmt->execute();
-    $courses = [];
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $courses[] = $row;
-    }
+    $stmt->bindValue(':program_id', $program['id'], PDO::PARAM_INT);
+    $stmt->execute();
+    $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Get dependencies
     $stmt = $conn->prepare('
@@ -36,10 +33,10 @@ try {
         FROM dependencies 
         WHERE program_id = :program_id
     ');
-    $stmt->bindValue(':program_id', $program['id'], SQLITE3_INTEGER);
-    $result = $stmt->execute();
+    $stmt->bindValue(':program_id', $program['id'], PDO::PARAM_INT);
+    $stmt->execute();
     $dependencies = [];
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $dependencies[] = [
             'from' => $row['course_from'],
             'to' => $row['course_to']

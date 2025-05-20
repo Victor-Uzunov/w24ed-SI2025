@@ -11,12 +11,12 @@ return [
             'database' => __DIR__ . '/../database/program.db',
             'in_memory' => false,
         ],
-        'postgres' => [
-            'type' => 'postgres',
+        'mysql' => [
+            'type' => 'mysql',
             'host' => getenv('DB_HOST') ?: 'localhost',
-            'port' => getenv('DB_PORT') ?: '5432',
+            'port' => getenv('DB_PORT') ?: '3306',
             'dbname' => getenv('DB_NAME') ?: 'fmi_courses',
-            'user' => getenv('DB_USER') ?: 'postgres',
+            'user' => getenv('DB_USER') ?: 'root',
             'password' => getenv('DB_PASSWORD') ?: '',
         ],
     ],

@@ -1,6 +1,6 @@
 # FMI Course Program Editor and Dependency Visualizer
 
-A comprehensive web application for creating, managing, and visualizing university course programs at FMI. This application allows faculty administrators and program coordinators to easily manage course dependencies and create visual representations of curriculum structures.
+A web application for creating and managing university course programs at FMI. This application allows faculty administrators and program coordinators to manage course dependencies and create visual representations of curriculum structures.
 
 ## Features
 
@@ -8,16 +8,15 @@ A comprehensive web application for creating, managing, and visualizing universi
 - Create and edit course programs for Bachelor's and Master's degrees
 - Add, edit, and remove courses with detailed information
 - Manage course dependencies through an interactive graph
-- Export programs to PDF format
 - Save and load program data
 - Visualize course dependencies in an interactive graph
 
 ### Course Management
 - Course name and basic information
-- Credit allocation
-- Semester assignment
+- Credit allocation (1-30 credits)
+- Semester assignment (1-8)
 - Course type (Mandatory/Optional/Facultative)
-- Prerequisites and dependencies
+- Prerequisites and dependencies with validation
 
 ### Visualization
 - Interactive dependency graph with drag-and-drop support
@@ -25,22 +24,22 @@ A comprehensive web application for creating, managing, and visualizing universi
 - Semester-based course organization
 - Color-coded course types
 - Dynamic graph layout
+- Zoom and pan controls
 
 ### Data Management
-- Flexible database support (PostgreSQL or SQLite)
-- Program export to PDF
+- MySQL or SQLite database support
 - Data validation and error handling
 - Transaction support for data integrity
+- Dependency validation to prevent circular references
 
 ## Technical Requirements
 
 ### Backend
 - PHP 7.4 or higher
-- PostgreSQL 12+ or SQLite3
+- MySQL 5.7+ or SQLite3
 - PHP PDO extension enabled
-- PHP pgsql extension (for PostgreSQL)
+- PHP mysql extension (for MySQL)
 - PHP sqlite3 extension (for SQLite)
-- Composer for dependency management
 
 ### Frontend
 - Modern web browser with JavaScript enabled
@@ -55,160 +54,87 @@ git clone [repository-url]
 cd fmi-course-program-editor
 ```
 
-2. Install PHP dependencies using Composer:
-```bash
-composer install
-```
-
-3. Ensure proper permissions for the database directory:
+2. Ensure proper permissions for the database directory:
 ```bash
 chmod 777 database
 ```
 
-4. Start the PHP development server:
+3. Start the PHP development server:
 ```bash
 php -S localhost:8000
 ```
 
-5. Open your browser and navigate to:
-```
-http://localhost:8000
-```
-
-## Development
-
-### Code Quality
-The project uses several tools to maintain code quality:
-- PHP_CodeSniffer for PSR-12 compliance
-- PHPStan for static analysis
-- PHPUnit for testing
-
-Run quality checks locally:
-```bash
-composer build    # Runs all checks
-composer cs      # Code style only
-composer phpstan # Static analysis only
-composer test    # Unit tests only
-```
-
-### CI/CD Pipeline
-The project uses GitHub Actions for continuous integration and deployment. For detailed information about the pipeline, see [CI/CD Documentation](docs/CI_CD.md).
-
 ## Database Configuration
 
-The application supports two database modes:
+The application supports both MySQL and SQLite databases. By default, it uses SQLite for development. To configure MySQL:
 
-### SQLite Mode (Default)
-No additional configuration needed. The application will automatically create and use an SQLite database in the `database` directory.
-
-### PostgreSQL Mode
-1. Install PostgreSQL 12 or higher
-2. Create a new database:
-```sql
-CREATE DATABASE fmi_courses;
-```
-
-3. Create the required tables (run these in your PostgreSQL client):
-```sql
-CREATE TABLE programs (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    type VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE courses (
-    id SERIAL PRIMARY KEY,
-    program_id INTEGER REFERENCES programs(id),
-    name VARCHAR(255) NOT NULL,
-    semester INTEGER NOT NULL,
-    credits INTEGER NOT NULL,
-    course_type VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE dependencies (
-    id SERIAL PRIMARY KEY,
-    program_id INTEGER REFERENCES programs(id),
-    course_id INTEGER REFERENCES courses(id),
-    prerequisite_id INTEGER REFERENCES courses(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(course_id, prerequisite_id)
-);
-```
-
-4. Configure database connection:
-   Create a `config.php` file in the root directory:
+1. Open `php/db.php`
+2. Update the database configuration:
 ```php
-<?php
-return [
-    'db_type' => 'pgsql',  // Use 'sqlite' for SQLite mode
-    'pgsql' => [
-        'host' => 'localhost',
-        'port' => '5432',
-        'dbname' => 'fmi_courses',
-        'user' => 'your_username',
-        'password' => 'your_password'
-    ]
+$config = [
+    'type' => 'mysql',
+    'host' => 'localhost',
+    'dbname' => 'your_database',
+    'username' => 'your_username',
+    'password' => 'your_password'
 ];
 ```
 
-5. Set appropriate permissions:
-```bash
-chmod 600 config.php
+## API Endpoints
+
+The application provides simple REST endpoints for managing program data:
+
+### GET /php/load_program.php
+- Loads the most recent program data
+- Returns JSON with program details, courses, and dependencies
+
+### POST /php/save_program.php
+- Saves program data
+- Accepts JSON with program details, courses, and dependencies
+- Validates dependencies and data integrity
+- Returns success/error status
+
+## Usage
+
+1. Create a New Program:
+   - Click "Нова програма" or use Ctrl+N
+   - Enter program name and type
+   - Add courses and their details
+
+2. Add Courses:
+   - Click "Добави дисциплина"
+   - Fill in course details (name, semester, credits, type)
+   - Credits must be between 1 and 30
+   - Choose course type
+
+3. Manage Dependencies:
+   - Hold Shift and click two courses to create a dependency
+   - Dependencies must follow semester order
+   - Circular dependencies are prevented
+   - Right-click a dependency line to remove it
+   - Drag courses to rearrange the graph
+   - Use zoom controls to adjust the view
+
+4. Save/Load Programs:
+   - Click "Запази" or use Ctrl+S to save
+   - Click "Зареди програма" or use Ctrl+O to load
+
+## Development
+
+The codebase is organized as follows:
+
 ```
-
-## Usage Guide
-
-### Creating a New Program
-1. Click "Нова програма" to start a fresh program
-2. Enter the program name and select the type (Bachelor/Master)
-3. Add courses using the "Добави дисциплина" button
-4. For each course, specify:
-   - Course name
-   - Semester (1-8)
-   - Credits
-   - Course type
-
-### Managing Dependencies
-1. Add courses that have prerequisites
-2. In the dependency graph section:
-   - Drag course nodes to organize them
-   - Connect prerequisites using the interface
-   - Visualize the relationship between courses
-
-### Exporting Programs
-1. Complete your program structure
-2. Click "Експорт" to generate a PDF
-3. The PDF will include:
-   - Program details
-   - Course list with details
-   - Dependency information
-
-### Saving and Loading
-- Use "Запази" to store your program
-- Use "Зареди програма" to retrieve saved programs
-
-## Project Structure
-
-```
-fmi-course-program-editor/
+/
 ├── css/
-│   └── style.css           # Main stylesheet
+│   └── style.css          # Application styles
 ├── js/
-│   ├── app.js             # Core application logic
-│   └── graph.js           # Dependency graph visualization
+│   ├── app.js            # Main application logic
+│   └── graph.js          # Dependency graph visualization
 ├── php/
-│   ├── db.php            # Database connection and schema
-│   ├── save_program.php  # Save endpoint
-│   ├── load_program.php  # Load endpoint
-│   └── export_program.php # PDF export functionality
-├── database/
-│   └── program.db        # SQLite database
-├── vendor/               # Composer dependencies
-├── composer.json         # Dependency configuration
-├── index.php            # Main entry point
-└── README.md            # Documentation
+│   ├── db.php           # Database configuration and utilities
+│   ├── load_program.php # Program loading endpoint
+│   └── save_program.php # Program saving endpoint
+└── index.php            # Main application page
 ```
 
 ## Contributing
@@ -223,4 +149,4 @@ fmi-course-program-editor/
 
 - FMI for the program structure requirements
 - TCPDF for PDF generation
-- PostgreSQL and SQLite for database management 
+- MySQL and SQLite for database management 

@@ -13,7 +13,6 @@
             <button id="newProgramBtn">Нова програма</button>
             <button id="loadProgramBtn">Зареди програма</button>
             <button id="saveProgramBtn">Запази</button>
-            <button id="exportProgramBtn">Експорт</button>
         </nav>
     </header>
 

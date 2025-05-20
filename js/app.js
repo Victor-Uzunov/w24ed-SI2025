@@ -13,7 +13,6 @@ class ProgramEditor {
         this.newProgramBtn = document.getElementById('newProgramBtn');
         this.loadProgramBtn = document.getElementById('loadProgramBtn');
         this.saveProgramBtn = document.getElementById('saveProgramBtn');
-        this.exportProgramBtn = document.getElementById('exportProgramBtn');
         this.addCourseBtn = document.getElementById('addCourseBtn');
 
         // Forms and containers
@@ -25,7 +24,6 @@ class ProgramEditor {
         this.newProgramBtn.setAttribute('data-tooltip', 'Създай нова учебна програма');
         this.loadProgramBtn.setAttribute('data-tooltip', 'Зареди съществуваща програма');
         this.saveProgramBtn.setAttribute('data-tooltip', 'Запази текущата програма');
-        this.exportProgramBtn.setAttribute('data-tooltip', 'Експортирай като PDF');
         this.addCourseBtn.setAttribute('data-tooltip', 'Добави нова дисциплина');
     }
 
@@ -33,7 +31,6 @@ class ProgramEditor {
         this.newProgramBtn.addEventListener('click', () => this.newProgram());
         this.loadProgramBtn.addEventListener('click', () => this.loadProgram());
         this.saveProgramBtn.addEventListener('click', () => this.saveProgram());
-        this.exportProgramBtn.addEventListener('click', () => this.exportProgram());
         this.addCourseBtn.addEventListener('click', () => this.addCourse());
 
         // Add form change listeners
@@ -70,21 +67,55 @@ class ProgramEditor {
     }
 
     showWelcomeMessage() {
-        const message = document.createElement('div');
-        message.className = 'success-message fade-in';
-        message.textContent = 'Добре дошли в редактора на учебни програми!';
-        document.querySelector('.container').insertBefore(message, document.querySelector('section'));
-        
-        setTimeout(() => message.remove(), 3000);
+        this.showMessage(
+            'Добре дошли в редактора на учебни програми! Създайте нова програма или заредете съществуваща.',
+            'info'
+        );
     }
 
-    showMessage(text, type = 'success') {
-        const message = document.createElement('div');
-        message.className = `${type}-message fade-in`;
-        message.textContent = text;
-        document.querySelector('.container').insertBefore(message, document.querySelector('section'));
+    showMessage(message, type = 'success') {
+        const messageContainer = document.createElement('div');
+        messageContainer.className = `${type}-message`;
+        messageContainer.textContent = message;
         
-        setTimeout(() => message.remove(), 3000);
+        // Add icon based on message type
+        const icon = document.createElement('span');
+        switch (type) {
+            case 'success':
+                icon.textContent = '✓';
+                break;
+            case 'error':
+                icon.textContent = '✕';
+                break;
+            case 'warning':
+                icon.textContent = '⚠';
+                break;
+            case 'info':
+                icon.textContent = 'ℹ';
+                break;
+        }
+        messageContainer.insertBefore(icon, messageContainer.firstChild);
+        
+        // Add close button
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '×';
+        closeBtn.className = 'close-message';
+        closeBtn.onclick = () => messageContainer.remove();
+        messageContainer.appendChild(closeBtn);
+        
+        // Insert at the top of the editor
+        const editor = document.getElementById('programEditor');
+        editor.insertBefore(messageContainer, editor.firstChild);
+        
+        // Auto-remove after 5 seconds for non-error messages
+        if (type !== 'error') {
+            setTimeout(() => {
+                if (messageContainer.parentNode) {
+                    messageContainer.classList.add('fade-out');
+                    setTimeout(() => messageContainer.remove(), 300);
+                }
+            }, 5000);
+        }
     }
 
     setDirty() {
@@ -210,47 +241,6 @@ class ProgramEditor {
         }
     }
 
-    async exportProgram() {
-        try {
-            this.validateProgram();
-            this.setLoading(true);
-
-            const response = await fetch('php/export_program.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: document.getElementById('programName').value,
-                    type: document.getElementById('programType').value,
-                    courses: this.courses,
-                    dependencies: this.dependencies
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Грешка при експортиране');
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'program_export.pdf';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            this.showMessage('Програмата е експортирана успешно');
-        } catch (error) {
-            console.error('Error exporting program:', error);
-            this.showMessage(error.message || 'Възникна грешка при експортиране на програмата', 'error');
-        } finally {
-            this.setLoading(false);
-        }
-    }
-
     addCourse() {
         const courseElement = this.courseTemplate.content.cloneNode(true);
         const courseItem = courseElement.querySelector('.course-item');
@@ -261,38 +251,109 @@ class ProgramEditor {
         courseItem.querySelector('.remove-course').addEventListener('click', (e) => {
             if (confirm('Сигурни ли сте, че искате да премахнете тази дисциплина?')) {
                 const courseElement = e.target.closest('.course-item');
+                const courseName = courseElement.querySelector('.course-name').value;
+                
+                // Remove any dependencies involving this course
+                this.dependencies = this.dependencies.filter(dep => 
+                    dep.from !== courseName && dep.to !== courseName
+                );
+                
                 courseElement.classList.add('fade-out');
                 setTimeout(() => {
                     courseElement.remove();
                     this.updateCourses();
+                    this.showMessage(`Дисциплината "${courseName}" е премахната успешно`);
                 }, 300);
             }
         });
 
-        // Add input validation
-        courseItem.querySelector('.course-credits').addEventListener('input', (e) => {
+        // Add input validation and real-time feedback
+        const nameInput = courseItem.querySelector('.course-name');
+        nameInput.addEventListener('input', (e) => {
+            const name = e.target.value.trim();
+            const isDuplicate = this.courses.some(course => 
+                course.name === name && course !== this.courses[this.courses.length - 1]
+            );
+            
+            if (isDuplicate) {
+                nameInput.setCustomValidity('Това име вече съществува');
+                nameInput.reportValidity();
+            } else {
+                nameInput.setCustomValidity('');
+            }
+            this.setDirty();
+        });
+
+        // Add credits validation
+        const creditsInput = courseItem.querySelector('.course-credits');
+        creditsInput.addEventListener('input', (e) => {
             const value = parseInt(e.target.value);
-            if (value < 0) e.target.value = 0;
+            if (value <= 0) {
+                e.target.value = 1;
+                creditsInput.setCustomValidity('Кредитите трябва да са положително число, по-голямо от 0');
+            } else if (value > 30) {
+                creditsInput.setCustomValidity('Кредитите не могат да надвишават 30');
+            } else {
+                creditsInput.setCustomValidity('');
+            }
+            creditsInput.reportValidity();
+            this.setDirty();
+        });
+
+        // Add semester change validation
+        const semesterSelect = courseItem.querySelector('.course-semester');
+        semesterSelect.addEventListener('change', () => {
+            const courseName = nameInput.value;
+            const newSemester = parseInt(semesterSelect.value);
+            
+            // Check if this would break any dependencies
+            const invalidDeps = this.dependencies.filter(dep => {
+                if (dep.from === courseName) {
+                    const toCourse = this.courses.find(c => c.name === dep.to);
+                    return toCourse && newSemester >= toCourse.semester;
+                }
+                if (dep.to === courseName) {
+                    const fromCourse = this.courses.find(c => c.name === dep.from);
+                    return fromCourse && fromCourse.semester >= newSemester;
+                }
+                return false;
+            });
+
+            if (invalidDeps.length > 0) {
+                this.showMessage('Внимание: Промяната на семестъра може да наруши съществуващи зависимости', 'warning');
+            }
+            
+            this.setDirty();
         });
 
         this.coursesList.appendChild(courseElement);
         this.updateCourses();
         this.setDirty();
+        
+        // Focus the name input of the new course
+        nameInput.focus();
+        
+        // Show help message for creating dependencies
+        this.showMessage('Съвет: Използвайте Shift + клик върху две дисциплини, за да създадете зависимост между тях', 'info');
     }
 
     setLoading(isLoading) {
-        const buttons = document.querySelectorAll('button');
-        if (isLoading) {
-            buttons.forEach(btn => {
+        const buttons = [
+            this.newProgramBtn,
+            this.loadProgramBtn,
+            this.saveProgramBtn,
+            this.addCourseBtn
+        ];
+        
+        buttons.forEach(btn => {
+            if (isLoading) {
                 btn.disabled = true;
                 btn.classList.add('loading');
-            });
-        } else {
-            buttons.forEach(btn => {
+            } else {
                 btn.disabled = false;
                 btn.classList.remove('loading');
-            });
-        }
+            }
+        });
     }
 
     renderCourses() {
