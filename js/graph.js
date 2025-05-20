@@ -10,18 +10,23 @@ class DependencyGraph {
         this.offset = { x: 0, y: 0 };
         this.isCreatingDependency = false;
         this.dependencyStartNode = null;
+        this.scale = 1;
+        this.viewBox = { x: 0, y: 0, width: 800, height: 600 };
         
         this.initializeSVG();
         this.bindEvents();
+        this.addZoomControls();
     }
 
     initializeSVG() {
         this.svg.setAttribute('width', '100%');
         this.svg.setAttribute('height', '100%');
-        this.svg.style.cursor = 'grab';
-        
-        // Add arrow marker definition
+        this.updateViewBox();
+
+        // Add definitions for markers and gradients
         const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        
+        // Arrow marker
         const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
         marker.setAttribute('id', 'arrowhead');
         marker.setAttribute('markerWidth', '10');
@@ -36,6 +41,27 @@ class DependencyGraph {
         
         marker.appendChild(polygon);
         defs.appendChild(marker);
+        
+        // Hover effect gradient
+        const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+        gradient.setAttribute('id', 'nodeHoverGradient');
+        gradient.setAttribute('x1', '0%');
+        gradient.setAttribute('y1', '0%');
+        gradient.setAttribute('x2', '100%');
+        gradient.setAttribute('y2', '100%');
+        
+        const stop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop1.setAttribute('offset', '0%');
+        stop1.setAttribute('style', 'stop-color:rgba(26,115,232,0.1);stop-opacity:1');
+        
+        const stop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop2.setAttribute('offset', '100%');
+        stop2.setAttribute('style', 'stop-color:rgba(26,115,232,0.2);stop-opacity:1');
+        
+        gradient.appendChild(stop1);
+        gradient.appendChild(stop2);
+        defs.appendChild(gradient);
+        
         this.svg.appendChild(defs);
 
         // Add help text
@@ -186,36 +212,116 @@ class DependencyGraph {
     }
 
     handleMouseDown(event) {
-        if (event.shiftKey) return; // Don't drag while creating dependencies
+        if (event.button !== 0) return; // Only handle left click
         
-        const target = event.target.closest('.node');
-        if (target) {
-            this.isDragging = true;
-            this.selectedNode = target;
-            const rect = target.getBoundingClientRect();
-            this.offset = {
-                x: event.clientX - rect.left,
-                y: event.clientY - rect.top
-            };
-            this.svg.style.cursor = 'grabbing';
+        const node = event.target.closest('.node');
+        if (node) {
+            if (event.shiftKey) {
+                this.handleDependencyCreation(node);
+            } else {
+                this.startNodeDrag(node, event);
+            }
+        } else {
+            this.startPan(event);
         }
+    }
+
+    startNodeDrag(node, event) {
+        this.isDragging = true;
+        this.selectedNode = node;
+        const transform = node.getAttribute('transform');
+        const [x, y] = transform.match(/translate\(([^,]+),([^)]+)\)/).slice(1).map(Number);
+        
+        this.offset = {
+            x: event.clientX - x,
+            y: event.clientY - y
+        };
+        
+        node.classList.add('dragging');
+    }
+
+    startPan(event) {
+        this.isPanning = true;
+        this.panStart = {
+            x: event.clientX,
+            y: event.clientY,
+            viewBoxX: this.viewBox.x,
+            viewBoxY: this.viewBox.y
+        };
     }
 
     handleMouseMove(event) {
         if (this.isDragging && this.selectedNode) {
-            event.preventDefault();
             const x = event.clientX - this.offset.x;
             const y = event.clientY - this.offset.y;
             
             this.selectedNode.setAttribute('transform', `translate(${x},${y})`);
             this.updateEdges();
+        } else if (this.isPanning) {
+            const dx = (event.clientX - this.panStart.x) / this.scale;
+            const dy = (event.clientY - this.panStart.y) / this.scale;
+            
+            this.viewBox.x = this.panStart.viewBoxX - dx;
+            this.viewBox.y = this.panStart.viewBoxY - dy;
+            this.updateViewBox();
         }
     }
 
     handleMouseUp() {
+        if (this.selectedNode) {
+            this.selectedNode.classList.remove('dragging');
+        }
         this.isDragging = false;
         this.selectedNode = null;
-        this.svg.style.cursor = 'grab';
+        this.isPanning = false;
+    }
+
+    handleDependencyCreation(node) {
+        if (!this.isCreatingDependency) {
+            this.isCreatingDependency = true;
+            this.dependencyStartNode = node;
+            node.classList.add('dependency-source');
+            
+            // Add temporary guide line
+            this.tempLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            this.tempLine.setAttribute('class', 'temp-dependency');
+            this.tempLine.setAttribute('stroke', '#1a73e8');
+            this.tempLine.setAttribute('stroke-width', '2');
+            this.tempLine.setAttribute('stroke-dasharray', '5,5');
+            this.svg.appendChild(this.tempLine);
+            
+            // Add mousemove listener for guide line
+            this.guideLine = (e) => {
+                const rect = this.svg.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / this.scale;
+                const y = (e.clientY - rect.top) / this.scale;
+                
+                const startRect = this.dependencyStartNode.getBoundingClientRect();
+                const startX = (startRect.left + startRect.width/2 - rect.left) / this.scale;
+                const startY = (startRect.top + startRect.height/2 - rect.top) / this.scale;
+                
+                this.tempLine.setAttribute('x1', startX);
+                this.tempLine.setAttribute('y1', startY);
+                this.tempLine.setAttribute('x2', x);
+                this.tempLine.setAttribute('y2', y);
+            };
+            document.addEventListener('mousemove', this.guideLine);
+        } else {
+            const endNode = node;
+            if (endNode !== this.dependencyStartNode) {
+                this.createDependency(
+                    this.dependencyStartNode.getAttribute('data-id'),
+                    endNode.getAttribute('data-id')
+                );
+            }
+            this.dependencyStartNode.classList.remove('dependency-source');
+            document.removeEventListener('mousemove', this.guideLine);
+            if (this.tempLine) {
+                this.tempLine.remove();
+            }
+            this.isCreatingDependency = false;
+            this.dependencyStartNode = null;
+        }
     }
 
     createNode(course, x, y) {
@@ -343,6 +449,80 @@ class DependencyGraph {
         });
 
         this.updateEdges();
+    }
+
+    addZoomControls() {
+        const controls = document.createElement('div');
+        controls.className = 'graph-controls';
+        controls.innerHTML = `
+            <button class="zoom-in" title="Увеличи">+</button>
+            <button class="zoom-out" title="Намали">-</button>
+            <button class="zoom-fit" title="Напасни">⟲</button>
+        `;
+        
+        this.container.appendChild(controls);
+        
+        controls.querySelector('.zoom-in').addEventListener('click', () => this.zoom(1.2));
+        controls.querySelector('.zoom-out').addEventListener('click', () => this.zoom(0.8));
+        controls.querySelector('.zoom-fit').addEventListener('click', () => this.zoomToFit());
+        
+        // Add mouse wheel zoom
+        this.svg.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.8 : 1.2;
+            this.zoom(delta);
+        });
+    }
+
+    zoom(factor) {
+        const oldScale = this.scale;
+        this.scale *= factor;
+        this.scale = Math.max(0.5, Math.min(2, this.scale)); // Limit zoom range
+        
+        // Adjust viewBox to zoom around center
+        const dScale = this.scale / oldScale;
+        const centerX = this.viewBox.x + this.viewBox.width / 2;
+        const centerY = this.viewBox.y + this.viewBox.height / 2;
+        
+        this.viewBox.width /= dScale;
+        this.viewBox.height /= dScale;
+        this.viewBox.x = centerX - this.viewBox.width / 2;
+        this.viewBox.y = centerY - this.viewBox.height / 2;
+        
+        this.updateViewBox();
+    }
+
+    zoomToFit() {
+        if (this.nodes.length === 0) return;
+        
+        let minX = Infinity, minY = Infinity;
+        let maxX = -Infinity, maxY = -Infinity;
+        
+        this.nodes.forEach(node => {
+            const transform = node.getAttribute('transform');
+            const [x, y] = transform.match(/translate\(([^,]+),([^)]+)\)/).slice(1).map(Number);
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + 150); // node width
+            maxY = Math.max(maxY, y + 60);  // node height
+        });
+        
+        const padding = 50;
+        this.viewBox = {
+            x: minX - padding,
+            y: minY - padding,
+            width: maxX - minX + padding * 2,
+            height: maxY - minY + padding * 2
+        };
+        
+        this.scale = 1;
+        this.updateViewBox();
+    }
+
+    updateViewBox() {
+        this.svg.setAttribute('viewBox', 
+            `${this.viewBox.x} ${this.viewBox.y} ${this.viewBox.width} ${this.viewBox.height}`
+        );
     }
 }
 

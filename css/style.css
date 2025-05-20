@@ -164,6 +164,7 @@ input:focus, select:focus {
     background-color: var(--hover-color);
     transition: all 0.3s ease;
     position: relative;
+    overflow: hidden;
 }
 
 #dependencyGraph:hover {
@@ -180,6 +181,11 @@ input:focus, select:focus {
     stroke-width: 3;
 }
 
+.temp-dependency {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
 .help-text {
     font-size: 12px;
     fill: var(--text-color);
@@ -191,37 +197,155 @@ input:focus, select:focus {
     transition: transform 0.3s ease;
 }
 
+.node rect {
+    transition: all 0.2s ease;
+}
+
 .node:hover rect {
     filter: brightness(0.95);
+    fill: url(#nodeHoverGradient);
 }
 
 .node.dragging {
     cursor: grabbing;
 }
 
-@keyframes fadeOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(10px); }
+.node.dependency-source rect {
+    stroke: var(--warning-color);
+    stroke-width: 3;
+    filter: brightness(1.05);
 }
 
-.fade-out {
-    animation: fadeOut 0.3s ease forwards;
+.graph-controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Course Type Colors */
+.graph-controls button {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: white;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.graph-controls button:hover {
+    background: var(--hover-color);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.graph-controls button:active {
+    transform: scale(0.95);
+}
+
+/* Course Type Colors with Improved Contrast */
 .course-mandatory rect {
     fill: var(--primary-color);
-    fill-opacity: 0.1;
+    fill-opacity: 0.15;
 }
 
 .course-optional rect {
     fill: var(--warning-color);
-    fill-opacity: 0.1;
+    fill-opacity: 0.15;
 }
 
 .course-facultative rect {
     fill: var(--success-color);
-    fill-opacity: 0.1;
+    fill-opacity: 0.15;
+}
+
+/* Message System */
+.success-message,
+.error-message,
+.warning-message,
+.info-message {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: slideIn 0.3s ease;
+    position: relative;
+    color: white;
+}
+
+.success-message {
+    background-color: var(--success-color);
+}
+
+.error-message {
+    background-color: var(--error-color);
+}
+
+.warning-message {
+    background-color: var(--warning-color);
+}
+
+.info-message {
+    background-color: var(--primary-color);
+}
+
+.close-message {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.2rem;
+    line-height: 1;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.close-message:hover {
+    opacity: 1;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+}
+
+.fade-out {
+    animation: fadeOut 0.3s ease forwards;
 }
 
 /* Loading Animation */
@@ -243,30 +367,6 @@ input:focus, select:focus {
 
 .remove-course:hover {
     background-color: #c82333;
-}
-
-/* Success Message */
-.success-message {
-    background-color: var(--success-color);
-    color: white;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-/* Error Message */
-.error-message {
-    background-color: var(--error-color);
-    color: white;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
 }
 
 /* Responsive Design */
