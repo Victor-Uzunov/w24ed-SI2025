@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Core\Response;
 use App\Service\ProgramService;
 use App\Exception\ValidationException;
 
@@ -9,55 +10,65 @@ class ProgramController
 {
     private ProgramService $programService;
 
-    public function __construct(ProgramService $programService)
+    public function __construct()
     {
-        $this->programService = $programService;
+        $this->programService = new ProgramService();
     }
 
-    public function list(): array
+    public function index(): Response
     {
-        return $this->programService->getAllPrograms();
-    }
-
-    public function create(array $data): array
-    {
-        $this->validateProgramData($data);
-        return $this->programService->createProgram($data);
-    }
-
-    public function update(int $id, array $data): array
-    {
-        $this->validateProgramData($data);
-        return $this->programService->updateProgram($id, $data);
-    }
-
-    public function delete(int $id): void
-    {
-        $this->programService->deleteProgram($id);
-    }
-
-    private function validateProgramData(array $data): void
-    {
-        $errors = [];
-
-        if (empty($data['name'])) {
-            $errors[] = 'Program name is required';
+        try {
+            $programs = $this->programService->getAllPrograms();
+            return new Response($programs);
+        } catch (\Exception $e) {
+            return new Response(['error' => $e->getMessage()], 500);
         }
+    }
 
-        if (!isset($data['years_to_study']) || $data['years_to_study'] < 3 || $data['years_to_study'] > 6) {
-            $errors[] = 'Years to study must be between 3 and 6';
+    public function show(int $id): Response
+    {
+        try {
+            $program = $this->programService->getProgram($id);
+            if (!$program) {
+                return new Response(['error' => 'Програмата не е намерена'], 404);
+            }
+            return new Response($program);
+        } catch (\Exception $e) {
+            return new Response(['error' => $e->getMessage()], 500);
         }
+    }
 
-        if (!isset($data['type']) || !in_array($data['type'], ['full-time', 'part-time', 'distance'])) {
-            $errors[] = 'Invalid program type';
+    public function store(array $data): Response
+    {
+        try {
+            $program = $this->programService->createProgram($data);
+            return new Response($program, 201);
+        } catch (ValidationException $e) {
+            return new Response(['errors' => $e->getErrors()], 422);
+        } catch (\Exception $e) {
+            return new Response(['error' => $e->getMessage()], 500);
         }
+    }
 
-        if (!isset($data['degree']) || !in_array($data['degree'], ['bachelor', 'master'])) {
-            $errors[] = 'Invalid degree type';
+    public function update(int $id, array $data): Response
+    {
+        try {
+            $program = $this->programService->updateProgram($id, $data);
+            return new Response($program);
+        } catch (ValidationException $e) {
+            return new Response(['errors' => $e->getErrors()], 422);
+        } catch (\Exception $e) {
+            return new Response(['error' => $e->getMessage()], 500);
         }
+    }
 
-        if (!empty($errors)) {
-            throw new ValidationException($errors);
+    public function destroy(int $id): Response
+    {
+        try {
+            $this->programService->deleteProgram($id);
+            return new Response(null, 204);
+        } catch (\Exception $e) {
+            return new Response(['error' => $e->getMessage()], 500);
         }
     }
 } 

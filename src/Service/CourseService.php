@@ -12,96 +12,80 @@ class CourseService
     private CourseRepository $courseRepository;
     private ProgramRepository $programRepository;
 
-    public function __construct(
-        CourseRepository $courseRepository,
-        ProgramRepository $programRepository
-    ) {
-        $this->courseRepository = $courseRepository;
-        $this->programRepository = $programRepository;
+    public function __construct()
+    {
+        $this->courseRepository = new CourseRepository();
+        $this->programRepository = new ProgramRepository();
     }
 
     public function getAllCourses(): array
     {
-        return $this->courseRepository->findAll();
+        $courses = $this->courseRepository->findAll();
+        return array_map([$this, 'transformCourseData'], $courses);
+    }
+
+    public function getCourse(int $id): ?array
+    {
+        $course = $this->courseRepository->find($id);
+        return $course ? $this->transformCourseData($course) : null;
     }
 
     public function getCoursesByProgram(int $programId): array
     {
-        $program = $this->programRepository->find($programId);
-        if (!$program) {
-            throw new NotFoundException('Program not found');
-        }
-
-        return $this->courseRepository->findByProgram($programId);
+        $courses = $this->courseRepository->findByProgram($programId);
+        return array_map([$this, 'transformCourseData'], $courses);
     }
 
-    public function getCourse(int $courseId): array
+    public function createCourse(array $data): array
     {
-        $course = $this->courseRepository->find($courseId);
-        if (!$course) {
-            throw new NotFoundException('Course not found');
+        // Validate that the program exists
+        $program = $this->programRepository->find($data['programme_id']);
+        if (!$program) {
+            throw new \InvalidArgumentException('Invalid program ID');
         }
+
+        // Validate that the year is within program's years_to_study
+        if ($data['year_available'] > $program['years_to_study']) {
+            throw new \InvalidArgumentException('Year available cannot be greater than program duration');
+        }
+
+        $course = $this->courseRepository->create($data);
+        return $this->transformCourseData($course);
+    }
+
+    public function updateCourse(int $id, array $data): array
+    {
+        // Validate that the program exists if program_id is being updated
+        if (isset($data['programme_id'])) {
+            $program = $this->programRepository->find($data['programme_id']);
+            if (!$program) {
+                throw new \InvalidArgumentException('Invalid program ID');
+            }
+
+            // Validate that the year is within program's years_to_study
+            if (isset($data['year_available']) && $data['year_available'] > $program['years_to_study']) {
+                throw new \InvalidArgumentException('Year available cannot be greater than program duration');
+            }
+        }
+
+        $course = $this->courseRepository->update($id, $data);
+        return $this->transformCourseData($course);
+    }
+
+    public function deleteCourse(int $id): void
+    {
+        $this->courseRepository->delete($id);
+    }
+
+    private function transformCourseData(array $course): array
+    {
+        // Add year display
+        $course['year_display'] = $course['year_available'] . ' година';
+        
+        // Add credits display
+        $course['credits_display'] = $course['credits'] . ' кредита';
 
         return $course;
-    }
-
-    public function createCourse(int $programId, array $data): array
-    {
-        // Verify program exists
-        $program = $this->programRepository->find($programId);
-        if (!$program) {
-            throw new NotFoundException('Program not found');
-        }
-
-        return $this->courseRepository->create([
-            'programme_id' => $programId,
-            'name' => $data['name'],
-            'credits' => (int) $data['credits'],
-            'year_available' => (int) $data['year_available'],
-            'depends_on' => $data['depends_on'] ?? []
-        ]);
-    }
-
-    public function updateCourse(int $programId, int $courseId, array $data): array
-    {
-        // Verify course exists and belongs to program
-        $course = $this->courseRepository->find($courseId);
-        if (!$course) {
-            throw new NotFoundException('Course not found');
-        }
-        if ($course['programme_id'] !== $programId) {
-            throw new ValidationException(['Course does not belong to this program']);
-        }
-
-        return $this->courseRepository->update($courseId, [
-            'name' => $data['name'],
-            'credits' => (int) $data['credits'],
-            'year_available' => (int) $data['year_available'],
-            'depends_on' => $data['depends_on'] ?? []
-        ]);
-    }
-
-    public function deleteCourse(int $programId, int $courseId): void
-    {
-        // Verify course exists and belongs to program
-        $course = $this->courseRepository->find($courseId);
-        if (!$course) {
-            throw new NotFoundException('Course not found');
-        }
-        if ($course['programme_id'] !== $programId) {
-            throw new ValidationException(['Course does not belong to this program']);
-        }
-
-        // Check if any other courses depend on this one
-        $dependentCourses = $this->courseRepository->findDependentCourses($courseId);
-        if (!empty($dependentCourses)) {
-            throw new ValidationException([
-                'Cannot delete course because other courses depend on it: ' . 
-                implode(', ', array_column($dependentCourses, 'name'))
-            ]);
-        }
-
-        $this->courseRepository->delete($courseId);
     }
 
     public function getProgramYearsToStudy(int $programId): int

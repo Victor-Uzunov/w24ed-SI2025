@@ -1,52 +1,27 @@
 <?php
 
+// Enable error reporting for development
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Set up autoloading
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Core\Router;
-use App\Core\Database;
-use App\Controller\ProgramController;
-use App\Controller\CourseController;
-use App\Service\ProgramService;
-use App\Service\CourseService;
-use App\Repository\ProgramRepository;
-use App\Repository\CourseRepository;
+// Load environment variables if needed
+if (file_exists(__DIR__ . '/../.env')) {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+    $dotenv->load();
+}
 
-// Load environment variables
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->load();
+// Handle CORS
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Initialize database connection
-$db = Database::getInstance()->getConnection();
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit();
+}
 
-// Initialize repositories
-$programRepository = new ProgramRepository($db);
-$courseRepository = new CourseRepository($db);
-
-// Initialize services
-$programService = new ProgramService($programRepository);
-$courseService = new CourseService($courseRepository, $programRepository);
-
-// Initialize controllers
-$programController = new ProgramController($programService);
-$courseController = new CourseController($courseService);
-
-// Initialize router
-$router = new Router();
-
-// Program routes
-$router->get('/api/programmes', [$programController, 'list']);
-$router->post('/api/programmes', [$programController, 'create']);
-$router->get('/api/programmes/{id}', [$programController, 'get']);
-$router->put('/api/programmes/{id}', [$programController, 'update']);
-$router->delete('/api/programmes/{id}', [$programController, 'delete']);
-
-// Course routes
-$router->get('/api/courses', [$courseController, 'list']);
-$router->get('/api/programmes/{programId}/courses', [$courseController, 'list']);
-$router->post('/api/programmes/{programId}/courses', [$courseController, 'create']);
-$router->get('/api/programmes/{programId}/courses/{id}', [$courseController, 'get']);
-$router->put('/api/programmes/{programId}/courses/{id}', [$courseController, 'update']);
-$router->delete('/api/programmes/{programId}/courses/{id}', [$courseController, 'delete']);
-
-// Handle the request
-$router->handleRequest(); 
+// Load routes
+require_once __DIR__ . '/../src/routes.php'; 

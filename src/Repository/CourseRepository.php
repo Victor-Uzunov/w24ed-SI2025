@@ -2,202 +2,126 @@
 
 namespace App\Repository;
 
+use App\Database;
+use App\Exception\ValidationException;
 use PDO;
 
 class CourseRepository
 {
     private PDO $db;
 
-    public function __construct(PDO $db)
+    public function __construct()
     {
-        $this->db = $db;
+        $this->db = Database::getInstance()->getConnection();
     }
 
     public function findAll(): array
     {
         $stmt = $this->db->query('
-            SELECT c.*, GROUP_CONCAT(cd.dependency_id) as depends_on
+            SELECT c.*, p.name as program_name 
             FROM courses c
-            LEFT JOIN course_dependencies cd ON c.id = cd.course_id
-            GROUP BY c.id
-            ORDER BY c.programme_id, c.year_available, c.id
+            JOIN programmes p ON p.id = c.programme_id
+            ORDER BY c.name
         ');
-        
-        return $this->processCourseResults($stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-
-    public function findByProgram(int $programId): array
-    {
-        $stmt = $this->db->prepare('
-            SELECT c.*, GROUP_CONCAT(cd.dependency_id) as depends_on
-            FROM courses c
-            LEFT JOIN course_dependencies cd ON c.id = cd.course_id
-            WHERE c.programme_id = ?
-            GROUP BY c.id
-            ORDER BY c.year_available, c.id
-        ');
-        $stmt->execute([$programId]);
-        
-        return $this->processCourseResults($stmt->fetchAll(PDO::FETCH_ASSOC));
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function find(int $id): ?array
     {
         $stmt = $this->db->prepare('
-            SELECT c.*, GROUP_CONCAT(cd.dependency_id) as depends_on
+            SELECT c.*, p.name as program_name 
             FROM courses c
-            LEFT JOIN course_dependencies cd ON c.id = cd.course_id
+            JOIN programmes p ON p.id = c.programme_id
             WHERE c.id = ?
-            GROUP BY c.id
         ');
         $stmt->execute([$id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        return $result ? $this->processCourseResults([$result])[0] : null;
+        return $result ?: null;
+    }
+
+    public function findByProgram(int $programId): array
+    {
+        $stmt = $this->db->prepare('
+            SELECT * FROM courses 
+            WHERE programme_id = ?
+            ORDER BY year_available, name
+        ');
+        $stmt->execute([$programId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function create(array $data): array
     {
-        $this->db->beginTransaction();
-        
-        try {
-            // Insert course
-            $stmt = $this->db->prepare('
-                INSERT INTO courses (programme_id, name, credits, year_available)
-                VALUES (:programme_id, :name, :credits, :year_available)
-            ');
+        $this->validateCourse($data);
 
-            $stmt->execute([
-                'programme_id' => $data['programme_id'],
-                'name' => $data['name'],
-                'credits' => $data['credits'],
-                'year_available' => $data['year_available']
-            ]);
+        $stmt = $this->db->prepare('
+            INSERT INTO courses (name, credits, year_available, programme_id)
+            VALUES (:name, :credits, :year_available, :programme_id)
+        ');
 
-            $courseId = $this->db->lastInsertId();
+        $stmt->execute([
+            ':name' => $data['name'],
+            ':credits' => $data['credits'],
+            ':year_available' => $data['year_available'],
+            ':programme_id' => $data['programme_id']
+        ]);
 
-            // Insert dependencies if any
-            if (!empty($data['depends_on'])) {
-                $this->updateDependencies($courseId, $data['depends_on']);
-            }
-
-            $this->db->commit();
-            return $this->find($courseId);
-            
-        } catch (\Exception $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
+        return $this->find($this->db->lastInsertId());
     }
 
     public function update(int $id, array $data): array
     {
-        $this->db->beginTransaction();
-        
-        try {
-            // Update course
-            $stmt = $this->db->prepare('
-                UPDATE courses 
-                SET name = :name,
-                    credits = :credits,
-                    year_available = :year_available
-                WHERE id = :id
-            ');
+        $this->validateCourse($data);
 
-            $stmt->execute([
-                'id' => $id,
-                'name' => $data['name'],
-                'credits' => $data['credits'],
-                'year_available' => $data['year_available']
-            ]);
+        $stmt = $this->db->prepare('
+            UPDATE courses 
+            SET name = :name,
+                credits = :credits,
+                year_available = :year_available,
+                programme_id = :programme_id
+            WHERE id = :id
+        ');
 
-            // Update dependencies
-            $this->updateDependencies($id, $data['depends_on'] ?? []);
+        $stmt->execute([
+            ':id' => $id,
+            ':name' => $data['name'],
+            ':credits' => $data['credits'],
+            ':year_available' => $data['year_available'],
+            ':programme_id' => $data['programme_id']
+        ]);
 
-            $this->db->commit();
-            return $this->find($id);
-            
-        } catch (\Exception $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
+        return $this->find($id);
     }
 
     public function delete(int $id): void
     {
-        $this->db->beginTransaction();
-        
-        try {
-            // Delete dependencies first
-            $stmt = $this->db->prepare('DELETE FROM course_dependencies WHERE course_id = ? OR dependency_id = ?');
-            $stmt->execute([$id, $id]);
+        $stmt = $this->db->prepare('DELETE FROM courses WHERE id = ?');
+        $stmt->execute([$id]);
+    }
 
-            // Delete course
-            $stmt = $this->db->prepare('DELETE FROM courses WHERE id = ?');
-            $stmt->execute([$id]);
+    private function validateCourse(array $data): void
+    {
+        $errors = [];
 
-            $this->db->commit();
-        } catch (\Exception $e) {
-            $this->db->rollBack();
-            throw $e;
+        if (empty($data['name'])) {
+            $errors[] = 'Името на курса е задължително';
         }
-    }
 
-    public function findDependentCourses(int $courseId): array
-    {
-        $stmt = $this->db->prepare('
-            SELECT c.*
-            FROM courses c
-            JOIN course_dependencies cd ON c.id = cd.course_id
-            WHERE cd.dependency_id = ?
-        ');
-        $stmt->execute([$courseId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function findDependencies(int $courseId): array
-    {
-        $stmt = $this->db->prepare('
-            SELECT c.*
-            FROM courses c
-            JOIN course_dependencies cd ON c.id = cd.dependency_id
-            WHERE cd.course_id = ?
-        ');
-        $stmt->execute([$courseId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    private function updateDependencies(int $courseId, array $dependencies): void
-    {
-        // Remove old dependencies
-        $stmt = $this->db->prepare('DELETE FROM course_dependencies WHERE course_id = ?');
-        $stmt->execute([$courseId]);
-
-        // Add new dependencies
-        if (!empty($dependencies)) {
-            $stmt = $this->db->prepare('
-                INSERT INTO course_dependencies (course_id, dependency_id)
-                VALUES (:course_id, :dependency_id)
-            ');
-
-            foreach ($dependencies as $dependencyId) {
-                $stmt->execute([
-                    'course_id' => $courseId,
-                    'dependency_id' => $dependencyId
-                ]);
-            }
+        if (!isset($data['credits']) || $data['credits'] < 1 || $data['credits'] > 30) {
+            $errors[] = 'Кредитите трябва да са между 1 и 30';
         }
-    }
 
-    private function processCourseResults(array $courses): array
-    {
-        return array_map(function ($course) {
-            if (isset($course['depends_on']) && $course['depends_on'] !== null) {
-                $course['depends_on'] = array_map('intval', explode(',', $course['depends_on']));
-            } else {
-                $course['depends_on'] = [];
-            }
-            return $course;
-        }, $courses);
+        if (!isset($data['year_available']) || $data['year_available'] < 1) {
+            $errors[] = 'Годината на достъпност трябва да е положително число';
+        }
+
+        if (empty($data['programme_id'])) {
+            $errors[] = 'Програмата е задължителна';
+        }
+
+        if (!empty($errors)) {
+            throw new ValidationException($errors);
+        }
     }
 } 
