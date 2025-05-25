@@ -10,204 +10,192 @@ A web-based application for managing bachelor degree programmes and their course
 - Input validation and error handling
 - Modern, responsive user interface
 
-## Technical Stack
-
-- Backend: PHP 7.4+ (no frameworks)
-- Database: MySQL 5.7+ with PDO
-- Frontend: HTML5, CSS3, and vanilla JavaScript (ES6+)
-- No external libraries or build tools required
-
 ## Requirements
 
-- PHP 7.4 or higher with PDO and MySQL extensions enabled
+- PHP 7.4 or higher with extensions:
+  - PDO MySQL
+  - JSON
 - MySQL 5.7 or higher
-- Web server (Apache/Nginx) with mod_rewrite enabled
 - Modern web browser with JavaScript enabled
-- Composer (optional, for development)
 
-## Installation and Setup
+## Quick Start Guide
 
-### 1. Clone the Repository
+### 1. Install Required Software
+
+#### Windows:
+1. Install PHP:
+   - Download PHP from [windows.php.net](https://windows.php.net/download/)
+   - Extract to `C:\php`
+   - Add `C:\php` to your PATH environment variable
+   - Copy `php.ini-development` to `php.ini`
+   - Enable required extensions in php.ini:
+     - extension=pdo_mysql
+     - extension=json
+
+2. Install MySQL:
+   - Download MySQL Installer from [mysql.com](https://dev.mysql.com/downloads/installer/)
+   - Run the installer and follow the setup wizard
+   - Remember your root password!
+
+#### Linux (Ubuntu/Debian):
 ```bash
+sudo apt update
+sudo apt install php php-mysql php-json mysql-server
+```
+
+#### macOS:
+```bash
+# Using Homebrew
+brew install php mysql
+brew services start mysql
+```
+
+### 2. Clone and Setup Project
+
+```bash
+# Clone the repository
 git clone [repository-url]
 cd bachelor-curriculum-manager
+
+# Create necessary directories
+mkdir config logs
+chmod 777 logs  # On Unix-like systems only
+
+# Run the setup script
+php setup/setup.php
 ```
 
-### 2. Database Setup
+### 3. Database Setup
 
-1. Create the MySQL database and user:
+1. Log in to MySQL:
+```bash
+# Windows
+mysql -u root -p
+
+# Linux/macOS (if no password set)
+sudo mysql
+```
+
+2. Run the database setup:
 ```sql
-CREATE DATABASE curriculum_manager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'curriculum_user'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON curriculum_manager.* TO 'curriculum_user'@'localhost';
-FLUSH PRIVILEGES;
+-- Inside MySQL prompt
+source setup/setup_database.sql;
 ```
 
-2. Import the database schema:
+Or from terminal:
 ```bash
-mysql -u curriculum_user -p curriculum_manager < schema.sql
+mysql -u root -p < setup/setup_database.sql
 ```
 
-### 3. Configuration
+### 4. Start the Application
 
-1. Update database credentials in `config/database.php`:
-```php
-return [
-    'host' => 'localhost',
-    'dbname' => 'curriculum_manager',
-    'username' => 'curriculum_user',
-    'password' => 'your_password',
-    'charset' => 'utf8mb4'
-];
-```
-
-2. Configure your web server:
-
-For Apache, ensure the following modules are enabled:
 ```bash
-sudo a2enmod rewrite
-sudo a2enmod headers
-sudo service apache2 restart
-```
-
-Example Apache VirtualHost configuration:
-```apache
-<VirtualHost *:80>
-    ServerName curriculum.local
-    DocumentRoot /path/to/bachelor-curriculum-manager
-    
-    <Directory /path/to/bachelor-curriculum-manager>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-    
-    ErrorLog ${APACHE_LOG_DIR}/curriculum_error.log
-    CustomLog ${APACHE_LOG_DIR}/curriculum_access.log combined
-</VirtualHost>
-```
-
-### 4. File Permissions
-
-Set appropriate permissions:
-```bash
-# On Linux/Unix systems
-chmod -R 755 .
-chmod -R 777 logs    # Create this directory for error logs
-chown -R www-data:www-data .  # Use appropriate web server user
-```
-
-### 5. Running the Application
-
-For development:
-```bash
+# Start PHP's built-in server
 php -S localhost:8000
 ```
 
-For production, access through your configured web server.
+Access the application at: http://localhost:8000
 
-## Testing
+## Using the Application
 
-### Manual Testing
+### Managing Programmes
 
-1. Programme Management Testing:
+1. Click "New Programme" to create a programme
+2. Fill in the required details:
+   - Name (3-150 characters)
+   - Years to study (3-6 years)
+   - Type (full-time/part-time/distance)
+3. Click on a programme to view its courses
+4. Use the delete button to remove a programme
+
+### Managing Courses
+
+1. Select a programme first
+2. Click "New Course" to add a course
+3. Fill in course details:
+   - Name (3-150 characters)
+   - Credits (1-15)
+   - Available year
+   - Description (optional)
+   - Prerequisites (from earlier years)
+4. Use the delete button to remove a course
+
+## API Documentation
+
+### Programmes API
+
+#### Get All Programmes
 ```bash
-# Create a test programme
+curl http://localhost:8000/api/programmes.php
+```
+
+#### Get Single Programme
+```bash
+curl http://localhost:8000/api/programmes.php?id=1
+```
+
+#### Create Programme
+```bash
 curl -X POST http://localhost:8000/api/programmes.php \
   -H "Content-Type: application/json" \
   -d '{"name":"Computer Science","years_to_study":3,"type":"full-time"}'
+```
 
-# Get all programmes
-curl http://localhost:8000/api/programmes.php
-
-# Get specific programme
-curl http://localhost:8000/api/programmes.php?id=1
-
-# Delete programme
+#### Delete Programme
+```bash
 curl -X DELETE http://localhost:8000/api/programmes.php?id=1
 ```
 
-2. Course Management Testing:
+### Courses API
+
+#### Get Course
 ```bash
-# Create a course
-curl -X POST "http://localhost:8000/api/courses.php?programme_id=1" \
+curl http://localhost:8000/api/courses.php?programme_id=1&id=1
+```
+
+#### Create Course
+```bash
+curl -X POST http://localhost:8000/api/courses.php?programme_id=1 \
   -H "Content-Type: application/json" \
-  -d '{"name":"Programming 101","credits":6,"available_year":1,"description":"Intro to programming"}'
-
-# Get course details
-curl "http://localhost:8000/api/courses.php?programme_id=1&id=1"
-
-# Delete course
-curl -X DELETE "http://localhost:8000/api/courses.php?programme_id=1&id=1"
+  -d '{
+    "name": "Programming 101",
+    "credits": 6,
+    "available_year": 1,
+    "description": "Introduction to programming"
+  }'
 ```
 
-### Automated Testing
-
-Create a new directory `tests` and add PHPUnit tests:
-
+#### Delete Course
 ```bash
-# Install PHPUnit (if using Composer)
-composer require --dev phpunit/phpunit
-
-# Run tests
-./vendor/bin/phpunit tests
+curl -X DELETE http://localhost:8000/api/courses.php?programme_id=1&id=1
 ```
-
-Example test structure:
-```
-tests/
-├── Unit/
-│   ├── ProgrammeTest.php
-│   └── CourseTest.php
-└── Integration/
-    ├── ProgrammeApiTest.php
-    └── CourseApiTest.php
-```
-
-## Known Issues and Limitations
-
-### Security
-1. No authentication/authorization system
-2. CORS settings are too permissive
-3. No rate limiting on API endpoints
-4. No input sanitization for HTML content
-
-### Database
-1. No connection pooling for high concurrency
-2. No database migration system
-3. No query optimization for large datasets
-4. No soft delete functionality
-
-### Frontend
-1. No loading states during API calls
-2. No offline support
-3. No pagination UI for large lists
-4. Limited error handling for network failures
-
-### Business Logic
-1. No maximum limit on course prerequisites
-2. No validation for complex circular dependencies
-3. No support for course credit requirements per year
-4. No validation for total programme credits
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. Database Connection Errors:
-   - Verify MySQL service is running
+   - Verify MySQL is running
    - Check credentials in config/database.php
    - Ensure MySQL user has correct privileges
 
-2. API Endpoint Errors:
-   - Check PHP error logs in logs/php_errors.log
-   - Verify .htaccess is properly configured
-   - Ensure mod_rewrite is enabled
+2. Port Already in Use:
+   ```bash
+   # Try a different port
+   php -S localhost:8001
+   ```
 
-3. Frontend Issues:
-   - Clear browser cache
-   - Check browser console for JavaScript errors
-   - Verify Content-Security-Policy headers
+3. Permission Issues:
+   ```bash
+   # On Unix-like systems
+   chmod -R 755 .
+   chmod -R 777 logs
+   ```
+
+4. PHP Extensions:
+   - Check php.ini configuration
+   - Verify required extensions are enabled
+   - Run `php -m` to list loaded extensions
 
 ### Debug Mode
 
@@ -215,9 +203,49 @@ To enable debug mode, modify `config/database.php`:
 ```php
 return [
     // ... existing config ...
-    'debug' => true  // Add this line
+    'debug' => true
 ];
 ```
+
+## Development
+
+### Project Structure
+```
+.
+├── api/                  # API endpoints
+├── config/              # Configuration files
+├── css/                 # Stylesheets
+├── js/                  # JavaScript modules
+├── logs/               # Application logs
+├── setup/              # Setup scripts
+├── src/                # PHP source files
+├── .htaccess          # URL rewriting rules
+├── index.html         # Main application page
+└── README.md          # This file
+```
+
+### Database Schema
+
+1. Programmes Table:
+   - id (INT, AUTO_INCREMENT)
+   - name (VARCHAR(150), UNIQUE)
+   - years_to_study (INT, 3-6)
+   - type (ENUM: full-time, part-time, distance)
+   - created_at (TIMESTAMP)
+
+2. Courses Table:
+   - id (INT, AUTO_INCREMENT)
+   - programme_id (INT, FK)
+   - name (VARCHAR(150))
+   - credits (INT, 1-15)
+   - available_year (INT)
+   - description (TEXT)
+   - created_at (TIMESTAMP)
+
+3. Course Dependencies Table:
+   - course_id (INT, FK)
+   - prerequisite_course_id (INT, FK)
+   - created_at (TIMESTAMP)
 
 ## Contributing
 
@@ -226,19 +254,6 @@ return [
 3. Write tests for new features
 4. Ensure all tests pass
 5. Submit a pull request
-
-## Future Improvements
-
-1. Add authentication and user roles
-2. Implement course editing functionality
-3. Add programme statistics and reporting
-4. Create data export/import features
-5. Add automated testing suite
-6. Implement soft delete functionality
-7. Add database migrations
-8. Improve error handling and logging
-9. Add API documentation using OpenAPI/Swagger
-10. Implement frontend state management
 
 ## License
 
