@@ -1,152 +1,106 @@
-# FMI Course Program Editor and Dependency Visualizer
+# ФМИ - Редактор на учебни програми
 
-A web application for creating and managing university course programs at FMI. This application allows faculty administrators and program coordinators to manage course dependencies and create visual representations of curriculum structures.
+Уеб приложение за управление на учебни програми и дисциплини във Факултета по математика и информатика.
 
-## Features
+## Функционалности
 
-### Core Functionality
-- Create and edit course programs for Bachelor's and Master's degrees
-- Add, edit, and remove courses with detailed information
-- Manage course dependencies through an interactive graph
-- Save and load program data
-- Visualize course dependencies in an interactive graph
+### Управление на програми
+- Създаване на нови учебни програми
+- Редактиране на съществуващи програми
+- Изтриване на програми
+- Задаване на:
+  - Име на програмата
+  - Степен на обучение (Бакалавър/Магистър)
+  - Години на обучение (3-6 години)
+  - Вид на обучението (Редовно/Задочно/Дистанционно)
 
-### Course Management
-- Course name and basic information
-- Credit allocation (1-30 credits)
-- Semester assignment (1-8)
-- Course type (Mandatory/Optional/Facultative)
-- Prerequisites and dependencies with validation
+### Управление на дисциплини
+- Добавяне на дисциплини към програми
+- Задаване на:
+  - Име на дисциплината
+  - Брой кредити (1-9)
+  - Година на изучаване
+  - Зависимости между дисциплини (prerequisites)
+- Преглед на всички дисциплини в системата
+- Управление на зависимости между дисциплини
 
-### Visualization
-- Interactive dependency graph with drag-and-drop support
-- Visual representation of course relationships
-- Semester-based course organization
-- Color-coded course types
-- Dynamic graph layout
-- Zoom and pan controls
+## Технически детайли
 
-### Data Management
-- MySQL or SQLite database support
-- Data validation and error handling
-- Transaction support for data integrity
-- Dependency validation to prevent circular references
+### База данни
+Приложението използва SQLite база данни (`database/program.db`) със следната структура:
 
-## Technical Requirements
+1. `programmes` таблица:
+   - id (PRIMARY KEY)
+   - name (UNIQUE)
+   - years_to_study (3-6)
+   - type (full-time/part-time/distance)
 
-### Backend
-- PHP 7.4 or higher
-- MySQL 5.7+ or SQLite3
-- PHP PDO extension enabled
-- PHP mysql extension (for MySQL)
-- PHP sqlite3 extension (for SQLite)
+2. `courses` таблица:
+   - id (PRIMARY KEY)
+   - programme_id (FOREIGN KEY)
+   - name
+   - credits (1-15)
+   - year_available
+   - description
 
-### Frontend
-- Modern web browser with JavaScript enabled
-- Support for SVG graphics
-- No additional plugins required
+3. `course_dependencies` таблица:
+   - course_id (FOREIGN KEY)
+   - depends_on_id (FOREIGN KEY)
 
-## Installation
+### Изчистване на данни
 
-1. Clone the repository:
+Приложението предоставя два начина за изчистване на данните:
+
+1. Изчистване на записите с запазване на структурата:
 ```bash
-git clone [repository-url]
-cd fmi-course-program-editor
+php cleanup.php
 ```
+Този метод:
+- Изтрива всички записи от таблиците
+- Нулира брояча за auto-increment
+- Запазва структурата на базата данни
 
-2. Ensure proper permissions for the database directory:
+2. Пълно изтриване на базата данни:
 ```bash
-chmod 777 database
+del database\program.db
 ```
+Този метод:
+- Изтрива целия файл на базата данни
+- При следващо стартиране, базата се създава наново
+- Осигурява напълно чисто начало
 
-3. Start the PHP development server:
-```bash
-php -S localhost:8000
-```
+## Интерфейс
 
-## Database Configuration
+### Основни табове
+1. **Програми**
+   - Списък на всички учебни програми
+   - Бутони за създаване, редактиране и изтриване
+   - Управление на дисциплини за всяка програма
 
-The application supports both MySQL and SQLite databases. By default, it uses SQLite for development. To configure MySQL:
+2. **Всички дисциплини**
+   - Общ преглед на всички дисциплини в системата
+   - Информация за кредити и година на изучаване
+   - Връзка към съответната програма
 
-1. Open `php/db.php`
-2. Update the database configuration:
-```php
-$config = [
-    'type' => 'mysql',
-    'host' => 'localhost',
-    'dbname' => 'your_database',
-    'username' => 'your_username',
-    'password' => 'your_password'
-];
-```
+### Диалогови прозорци
+1. **Създаване/Редактиране на програма**
+   - Форма за основни данни на програмата
+   - Валидация на въведените данни
 
-## API Endpoints
+2. **Управление на дисциплини**
+   - Добавяне на нови дисциплини
+   - Задаване на зависимости
+   - Валидация на кредити и задължителни полета
 
-The application provides simple REST endpoints for managing program data:
+## Валидация и съобщения
+- Проверка за задължителни полета
+- Валидация на кредити (1-9)
+- Валидация на години на обучение
+- Информативни съобщения за успех/грешка
+- Потвърждение при изтриване
 
-### GET /php/load_program.php
-- Loads the most recent program data
-- Returns JSON with program details, courses, and dependencies
-
-### POST /php/save_program.php
-- Saves program data
-- Accepts JSON with program details, courses, and dependencies
-- Validates dependencies and data integrity
-- Returns success/error status
-
-## Usage
-
-1. Create a New Program:
-   - Click "Нова програма" or use Ctrl+N
-   - Enter program name and type
-   - Add courses and their details
-
-2. Add Courses:
-   - Click "Добави дисциплина"
-   - Fill in course details (name, semester, credits, type)
-   - Credits must be between 1 and 30
-   - Choose course type
-
-3. Manage Dependencies:
-   - Hold Shift and click two courses to create a dependency
-   - Dependencies must follow semester order
-   - Circular dependencies are prevented
-   - Right-click a dependency line to remove it
-   - Drag courses to rearrange the graph
-   - Use zoom controls to adjust the view
-
-4. Save/Load Programs:
-   - Click "Запази" or use Ctrl+S to save
-   - Click "Зареди програма" or use Ctrl+O to load
-
-## Development
-
-The codebase is organized as follows:
-
-```
-/
-├── css/
-│   └── style.css          # Application styles
-├── js/
-│   ├── app.js            # Main application logic
-│   └── graph.js          # Dependency graph visualization
-├── php/
-│   ├── db.php           # Database configuration and utilities
-│   ├── load_program.php # Program loading endpoint
-│   └── save_program.php # Program saving endpoint
-└── index.php            # Main application page
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## Acknowledgments
-
-- FMI for the program structure requirements
-- TCPDF for PDF generation
-- MySQL and SQLite for database management 
+## Системни изисквания
+- PHP 7.4 или по-нова версия
+- SQLite поддръжка в PHP
+- Уеб сървър (Apache/Nginx)
+- Модерен уеб браузър 

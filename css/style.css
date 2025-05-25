@@ -1,13 +1,13 @@
 :root {
     --primary-color: #1a73e8;
-    --secondary-color: #4285f4;
+    --secondary-color: #5f6368;
     --text-color: #202124;
-    --background-color: #ffffff;
+    --background-color: #f8f9fa;
     --border-color: #dadce0;
     --hover-color: #f8f9fa;
-    --success-color: #0f9d58;
+    --success-color: #188038;
     --warning-color: #f4b400;
-    --error-color: #dc3545;
+    --error-color: #d93025;
     --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -19,7 +19,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--background-color);
@@ -28,87 +28,88 @@ body {
 
 /* Header Styles */
 header {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px var(--shadow-color);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+    background-color: white;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {
-    margin-bottom: 1.5rem;
-    font-size: 1.8rem;
-    font-weight: 500;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 nav {
     display: flex;
     gap: 1rem;
-    flex-wrap: wrap;
 }
 
 /* Button Styles */
 button {
-    padding: 0.75rem 1.5rem;
-    border: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--primary-color);
     border-radius: 4px;
-    background-color: var(--secondary-color);
-    color: white;
+    background-color: white;
+    color: var(--primary-color);
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 2px 4px var(--shadow-color);
+    transition: all 0.2s;
 }
 
 button:hover {
-    background-color: #3367d6;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px var(--shadow-color);
-}
-
-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px var(--shadow-color);
+    background-color: var(--primary-color);
+    color: white;
 }
 
 /* Container and Section Styles */
 .container {
     max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+    margin: 2rem auto;
+    padding: 0 1rem;
 }
 
-section {
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 2rem;
+.programs-list {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1rem;
     margin-bottom: 2rem;
-    box-shadow: 0 4px 6px var(--shadow-color);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-section:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px var(--shadow-color);
-}
-
-h2 {
-    margin-bottom: 1.5rem;
-    color: var(--primary-color);
-    font-size: 1.5rem;
-    font-weight: 500;
+.program-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
+    transition: all 0.3s ease;
 }
 
-/* Form Styles */
+.program-item:last-child {
+    border-bottom: none;
+}
+
+.program-item:hover {
+    background-color: var(--hover-color);
+    transform: translateX(5px);
+}
+
+.program-item .program-info h3 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.program-item .program-info p {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+#programEditor {
+    background-color: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -116,33 +117,61 @@ h2 {
 label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-color);
+    color: var(--secondary-color);
 }
 
-input, select {
+input, select, textarea {
     width: 100%;
-    padding: 0.75rem;
-    border: 2px solid var(--border-color);
-    border-radius: 6px;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
     font-size: 1rem;
-    transition: all 0.2s ease;
 }
 
-input:focus, select:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.course-item {
+    background-color: var(--background-color);
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.course-dependencies {
+    margin: 1rem 0;
+}
+
+.depends-on {
+    height: 100px;
+}
+
+.hidden {
+    display: none;
+}
+
+.error {
+    color: var(--error-color);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.success {
+    color: var(--success-color);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
 }
 
 /* Course Item Styles */
 .course-item {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    grid-template-columns: auto minmax(200px, 2fr) 120px 120px 150px auto;
     gap: 1rem;
     padding: 1.5rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
     margin-bottom: 1rem;
     align-items: center;
     background-color: white;
@@ -150,9 +179,102 @@ input:focus, select:focus {
 }
 
 .course-item:hover {
-    background-color: var(--hover-color);
     border-color: var(--primary-color);
-    transform: translateX(5px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.course-item input,
+.course-item select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.course-item input:focus,
+.course-item select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+}
+
+.course-item .course-name {
+    min-width: 250px;
+}
+
+.course-item .course-credits {
+    width: 100px;
+}
+
+.course-item .course-year {
+    width: 120px;
+}
+
+.course-item .depends-on-id {
+    width: 150px;
+}
+
+.course-item .remove-course {
+    padding: 0.75rem 1rem;
+    background-color: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.course-item .remove-course:hover {
+    background-color: #c82333;
+}
+
+/* Course List in All Courses Tab */
+.course-list-item {
+    display: grid;
+    grid-template-columns: auto minmax(200px, 2fr) 120px 120px 150px;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+    background-color: white;
+}
+
+.course-list-item:last-child {
+    border-bottom: none;
+}
+
+.course-list-item .course-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.course-list-item .program-name {
+    color: var(--primary-color);
+    font-size: 0.875rem;
+}
+
+/* Course Dialog */
+#courseDialog .modal-content {
+    max-width: 900px;
+    width: 95%;
+}
+
+#coursesList {
+    max-height: 500px;
+    overflow-y: auto;
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: var(--background-color);
+    border-radius: 4px;
+}
+
+.program-name-display {
+    color: var(--primary-color);
+    font-size: 1rem;
+    margin: 0.5rem 0 1.5rem;
+    font-weight: 500;
 }
 
 /* Dependency Graph Styles */
@@ -362,7 +484,11 @@ input:focus, select:focus {
 /* Button Variants */
 .remove-course {
     background-color: var(--error-color);
+    color: white;
+    border: none;
     padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .remove-course:hover {
@@ -435,4 +561,845 @@ input:focus, select:focus {
 [data-tooltip]:hover:before {
     opacity: 1;
     visibility: visible;
+}
+
+.program-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.program-actions button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.program-actions .edit-program {
+    background-color: var(--primary-color);
+    color: white;
+    border: 1px solid var(--primary-color);
+}
+
+.program-actions .edit-program:hover {
+    background-color: #1557b0;
+    border-color: #1557b0;
+}
+
+.program-actions .manage-courses {
+    background-color: var(--secondary-color);
+    color: white;
+    border: 1px solid var(--secondary-color);
+}
+
+.program-actions .manage-courses:hover {
+    background-color: #4a4e52;
+    border-color: #4a4e52;
+}
+
+.program-actions .delete-program {
+    background-color: white;
+    color: var(--error-color);
+    border: 1px solid var(--error-color);
+}
+
+.program-actions .delete-program:hover {
+    background-color: var(--error-color);
+    color: white;
+}
+
+/* Modal Dialog */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s;
+}
+
+.modal:not(.hidden) .modal-content {
+    transform: translateY(0);
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+#skipToCoursesBtn {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+#nextToCoursesBtn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Course ID Display */
+.course-id {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.course-id-value {
+    font-weight: bold;
+}
+
+/* Update course item grid */
+.course-dependencies {
+    grid-column: 1 / -1;
+    margin-top: 1rem;
+}
+
+.depends-on {
+    width: 100%;
+    height: 100px;
+    margin-top: 0.5rem;
+}
+
+/* Error Message Styling */
+.validation-error {
+    background-color: var(--error-color);
+    color: white;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.validation-error::before {
+    content: '⚠';
+    font-size: 1.2em;
+}
+
+/* No Programs Message */
+.no-programs-message,
+.no-courses-message {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 3rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    min-height: 200px;
+    margin: 2rem 0;
+}
+
+.message-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.message-content h2 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.message-content p {
+    color: var(--text-color);
+    opacity: 0.8;
+    line-height: 1.5;
+}
+
+.message-content::before {
+    content: '📚';
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.no-courses-message .message-content::before {
+    content: '📖';
+}
+
+/* Empty State Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.no-programs-message,
+.no-courses-message {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close-modal:hover {
+    color: var(--error-color);
+}
+
+/* Dialog Steps */
+.dialog-step {
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.dialog-step.hidden {
+    display: none;
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.dialog-step:not(.hidden) {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.modal-header h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+}
+
+/* Dialog Courses List */
+#dialogCoursesList {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 1rem 0;
+    padding-right: 1rem;
+}
+
+#dialogCoursesList:empty {
+    display: none;
+}
+
+#dialogAddCourseBtn {
+    margin: 1rem 0;
+    width: 100%;
+}
+
+/* Update button styles */
+.button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+#skipCoursesBtn {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+#saveProgramBtn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#nextToCoursesBtn {
+    background-color: var(--primary-color);
+    color: white;
+    min-width: 120px;
+}
+
+/* Program List Item */
+.program-info {
+    flex-grow: 1;
+}
+
+/* Course Dialog */
+#courseDialog .modal-content {
+    max-width: 800px;
+}
+
+#coursesList {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 1rem 0;
+    padding-right: 1rem;
+}
+
+.add-course-btn {
+    width: 100%;
+    margin: 1rem 0;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Validation Messages */
+.validation-error {
+    background-color: var(--error-color);
+    color: white;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.validation-error::before {
+    content: '⚠';
+    font-size: 1.2em;
+}
+
+.depends-on-id {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: none;
+    color: var(--secondary-color);
+    font-size: 1rem;
+    cursor: pointer;
+    position: relative;
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+    outline: none; /* Remove focus outline */
+}
+
+.tab-btn:hover {
+    background: none;
+    color: var(--secondary-color);
+}
+
+.tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -1rem;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--primary-color);
+    transform: scaleX(0);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.tab-btn.active::after {
+    transform: scaleX(1);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Course List in Tabs */
+.courses-list {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.course-list-item {
+    display: grid;
+    grid-template-columns: auto 2fr 1fr 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.course-list-item:last-child {
+    border-bottom: none;
+}
+
+.course-list-item .course-id {
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.course-list-item .program-name {
+    color: var(--primary-color);
+    font-size: 0.875rem;
+}
+
+/* Program Dialog Updates */
+.program-name-display {
+    color: var(--primary-color);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+#programDialogTitle {
+    margin: 0;
+}
+
+/* No Items Messages */
+.no-programs-message,
+.no-courses-message {
+    text-align: center;
+    padding: 3rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.message-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.message-content h2 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.message-content p {
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+/* Course Dialog Styles */
+.courses-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.courses-header h2 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1.5rem;
+}
+
+/* Remove back button styles */
+.header-left,
+.back-to-programs {
+    display: none;
+}
+
+.add-course-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-course-btn:hover {
+    background-color: #1557b0;
+}
+
+.add-course-btn span {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.course-item {
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.course-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.course-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.course-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.remove-course {
+    background-color: var(--error-color);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.remove-course:hover {
+    background-color: #c82333;
+    transform: scale(1.1);
+}
+
+.no-courses-message {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.no-courses-message p {
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+}
+
+/* Make program items clickable */
+.program-item {
+    transition: all 0.3s ease;
+}
+
+.program-item:hover {
+    transform: translateX(5px);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+/* Course Form Groups */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+}
+
+/* Courses Page Styles */
+.courses-page {
+    background-color: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.courses-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.courses-header h2 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1.5rem;
+}
+
+.courses-list {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Remove courses footer and save button styles */
+.courses-footer,
+.save-courses-btn {
+    display: none;
+}
+
+/* Update course item styles for the new layout */
+.course-item {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.course-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px var(--shadow-color);
+    transform: translateY(-2px);
+}
+
+.course-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+/* Update add course button */
+.add-course-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.add-course-btn:hover {
+    background-color: #1557b0;
+    transform: translateY(-2px);
+}
+
+.add-course-btn:active {
+    transform: translateY(0);
+}
+
+.add-course-btn span {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Empty state styling */
+.no-courses-message {
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    margin: 2rem 0;
+}
+
+.no-courses-message p {
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* New Course Dialog Styles */
+#newCourseDialog .modal-content {
+    max-width: 500px;
+}
+
+#newCourseDialog .modal-header {
+    margin-bottom: 1.5rem;
+}
+
+#newCourseDialog .form-group {
+    margin-bottom: 1.5rem;
+}
+
+#newCourseDialog label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+#newCourseDialog input,
+#newCourseDialog select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#newCourseDialog input:focus,
+#newCourseDialog select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+}
+
+#newCourseDialog .button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+#newCourseDialog .cancel-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#newCourseDialog .cancel-btn:hover {
+    background-color: #4a4e52;
+}
+
+#newCourseDialog .save-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#newCourseDialog .save-btn:hover {
+    background-color: #1557b0;
+}
+
+/* Program Sections in All Courses Tab */
+.program-courses-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.program-courses-section:last-child {
+    margin-bottom: 0;
+}
+
+.program-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.program-header h3 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1.25rem;
+}
+
+.program-courses-section .no-courses-message {
+    background-color: var(--background-color);
+    padding: 1.5rem;
+    border-radius: 4px;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.program-courses-section .no-courses-message p {
+    margin: 0;
+    color: var(--secondary-color);
+}
+
+.program-courses-section .courses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.program-courses-section .course-list-item {
+    background-color: var(--background-color);
+    padding: 1rem;
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: auto 2fr 120px 120px;
+    gap: 1rem;
+    align-items: center;
 } 

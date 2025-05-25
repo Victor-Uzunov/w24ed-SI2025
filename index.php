@@ -12,69 +12,129 @@
         <nav>
             <button id="newProgramBtn">Нова програма</button>
             <button id="loadProgramBtn">Зареди програма</button>
-            <button id="saveProgramBtn">Запази</button>
         </nav>
     </header>
 
     <main>
         <div class="container">
-            <div id="programEditor">
-                <section id="basicInfo">
-                    <h2>Основна информация</h2>
+            <!-- Tabs Navigation -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="programs">Програми</button>
+                <button class="tab-btn" data-tab="courses">Всички дисциплини</button>
+            </div>
+
+            <!-- Programs Tab -->
+            <div id="programsTab" class="tab-content active">
+                <div id="programsList" class="programs-list">
+                    <div id="noProgramsMessage" class="no-programs-message">
+                        <div class="message-content">
+                            <h2>Няма налични програми</h2>
+                            <p>Натиснете бутона "Нова програма", за да създадете нова учебна програма.</p>
+                        </div>
+                    </div>
+                    <div id="programsContainer">
+                        <!-- Programs will be listed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Courses Tab -->
+            <div id="coursesTab" class="tab-content">
+                <div class="courses-list">
+                    <div id="noCoursesMessage" class="no-courses-message">
+                        <div class="message-content">
+                            <h2>Няма налични дисциплини</h2>
+                            <p>Добавете дисциплини към някоя от програмите.</p>
+                        </div>
+                    </div>
+                    <div id="allCoursesContainer">
+                        <!-- All courses will be listed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Program Creation/Edit Dialog -->
+            <div id="programDialog" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="programDialogTitle">Създаване на нова програма</h2>
+                        <button class="close-modal" id="closeDialog">&times;</button>
+                    </div>
                     <form id="programBasicForm">
+                        <input type="hidden" id="programId">
                         <div class="form-group">
                             <label for="programName">Име на програмата:</label>
                             <input type="text" id="programName" required>
                         </div>
                         <div class="form-group">
-                            <label for="programType">Вид на програмата:</label>
-                            <select id="programType">
+                            <label for="educationDegree">Степен на обучение:</label>
+                            <select id="educationDegree" required>
                                 <option value="bachelor">Бакалавър</option>
                                 <option value="master">Магистър</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label for="yearsToStudy">Години на обучение:</label>
+                            <select id="yearsToStudy">
+                                <option value="3">3 години</option>
+                                <option value="4">4 години</option>
+                                <option value="5">5 години</option>
+                                <option value="6">6 години</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="programType">Вид на програмата:</label>
+                            <select id="programType">
+                                <option value="full-time">Редовно</option>
+                                <option value="part-time">Задочно</option>
+                                <option value="distance">Дистанционно</option>
+                            </select>
+                        </div>
+                        <div class="button-group">
+                            <button type="submit" id="saveProgramBtn">Запази</button>
+                        </div>
                     </form>
-                </section>
+                </div>
+            </div>
 
-                <section id="coursesSection">
-                    <h2>Дисциплини</h2>
+            <!-- Course Management Dialog -->
+            <div id="courseDialog" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Управление на дисциплини</h2>
+                        <span class="program-name-display"></span>
+                        <button class="close-modal" id="closeCourseDialog">&times;</button>
+                    </div>
                     <div id="coursesList"></div>
-                    <button id="addCourseBtn">Добави дисциплина</button>
-                </section>
-
-                <section id="dependenciesSection">
-                    <h2>Зависимости между дисциплините</h2>
-                    <div id="dependencyGraph"></div>
-                </section>
+                    <button id="addCourseBtn" class="add-course-btn">Добави дисциплина</button>
+                    <div class="button-group">
+                        <button type="button" id="saveCourseChangesBtn">Запази промените</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- Templates -->
+    <!-- Course Template -->
     <template id="courseTemplate">
         <div class="course-item">
-            <input type="text" class="course-name" placeholder="Име на дисциплината">
-            <select class="course-semester">
-                <option value="1">Семестър 1</option>
-                <option value="2">Семестър 2</option>
-                <option value="3">Семестър 3</option>
-                <option value="4">Семестър 4</option>
-                <option value="5">Семестър 5</option>
-                <option value="6">Семестър 6</option>
-                <option value="7">Семестър 7</option>
-                <option value="8">Семестър 8</option>
+            <div class="course-id">ID: <span class="course-id-value"></span></div>
+            <input type="text" class="course-name" placeholder="Име на дисциплината" required>
+            <input type="number" class="course-credits" placeholder="Кредити" min="1" max="9" required>
+            <select class="course-year" required>
+                <option value="">Изберете година</option>
+                <option value="1">Година 1</option>
+                <option value="2">Година 2</option>
+                <option value="3">Година 3</option>
+                <option value="4">Година 4</option>
+                <option value="5">Година 5</option>
+                <option value="6">Година 6</option>
             </select>
-            <input type="number" class="course-credits" placeholder="Кредити" min="0">
-            <select class="course-type">
-                <option value="mandatory">Задължителна</option>
-                <option value="optional">Избираема</option>
-                <option value="facultative">Факултативна</option>
-            </select>
+            <input type="number" class="depends-on-id" placeholder="ID на зависима дисциплина (незадължително)">
             <button class="remove-course">Премахни</button>
         </div>
     </template>
 
     <script src="js/app.js"></script>
-    <script src="js/graph.js"></script>
 </body>
 </html> 
