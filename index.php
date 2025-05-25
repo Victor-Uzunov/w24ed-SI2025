@@ -11,7 +11,6 @@
         <h1>Редактор на учебни програми - ФМИ</h1>
         <nav>
             <button id="newProgramBtn">Нова програма</button>
-            <button id="loadProgramBtn">Зареди програма</button>
         </nav>
     </header>
 

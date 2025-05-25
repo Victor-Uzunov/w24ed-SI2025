@@ -16,7 +16,6 @@ class ProgramEditor {
         // Buttons
         this.newProgramBtn = document.getElementById('newProgramBtn');
         this.saveProgramBtn = document.getElementById('saveProgramBtn');
-        this.addCourseBtn = document.getElementById('addCourseBtn');
         this.closeDialogBtn = document.getElementById('closeDialog');
 
         // Add new course dialog elements
@@ -29,10 +28,11 @@ class ProgramEditor {
             this.newCourseDialog.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2>Добавяне на нова дисциплина</h2>
+                        <h2 id="courseDialogTitle">Добавяне на нова дисциплина</h2>
                         <button class="close-modal" id="closeNewCourseDialog">×</button>
                     </div>
                     <form id="newCourseForm">
+                        <input type="hidden" id="courseId" value="">
                         <div class="form-group">
                             <label for="newCourseName">Име на дисциплината</label>
                             <input type="text" id="newCourseName" required>
@@ -53,12 +53,18 @@ class ProgramEditor {
                             </select>
                         </div>
                         <div class="form-group">
+                            <label for="newCourseProgramme">Програма</label>
+                            <select id="newCourseProgramme" required>
+                                <option value="">Изберете програма</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="newCourseDependsOn">Зависи от (ID на друга дисциплина)</label>
                             <input type="number" id="newCourseDependsOn" min="1">
                         </div>
                         <div class="button-group">
                             <button type="button" class="cancel-btn" id="cancelNewCourse">Отказ</button>
-                            <button type="submit" class="save-btn">Създай дисциплина</button>
+                            <button type="submit" class="save-btn">Запази</button>
                         </div>
                     </form>
                 </div>
@@ -82,7 +88,6 @@ class ProgramEditor {
         this.allCoursesContainer = document.getElementById('allCoursesContainer');
         this.noProgramsMessage = document.getElementById('noProgramsMessage');
         this.noCoursesMessage = document.getElementById('noCoursesMessage');
-        this.coursesList = document.getElementById('coursesList');
     }
 
     bindEvents() {
@@ -144,6 +149,8 @@ class ProgramEditor {
             const response = await fetch('api/programmes?page=1&limit=20');
             const data = await response.json();
             
+            console.log('Programs tab data:', data); // Debug log
+            
             this.programsContainer.innerHTML = '';
             
             if (!data || data.length === 0) {
@@ -154,32 +161,9 @@ class ProgramEditor {
                 this.programsContainer.style.display = 'block';
                 
                 data.forEach(programme => {
-                    const div = document.createElement('div');
-                    div.className = 'program-item';
-                    div.style.cursor = 'pointer';
-                    div.innerHTML = `
-                        <div class="program-info">
-                            <h3>${programme.name}</h3>
-                            <p>${programme.years_to_study} години, ${programme.type}</p>
-                        </div>
-                        <div class="program-actions">
-                            <button class="edit-program">Редактирай</button>
-                            <button class="delete-program">Изтрий</button>
-                        </div>
-                    `;
-
-                    // Add click handler for the entire program item
-                    div.addEventListener('click', (e) => {
-                        // Prevent triggering when clicking buttons
-                        if (!e.target.closest('.program-actions')) {
-                            this.manageCourses(programme.id, programme.name);
-                        }
-                    });
-
-                    div.querySelector('.edit-program').addEventListener('click', () => this.editProgram(programme.id));
-                    div.querySelector('.delete-program').addEventListener('click', () => this.deleteProgram(programme.id));
-                    
-                    this.programsContainer.appendChild(div);
+                    console.log('Program in programs tab:', programme); // Debug log for each program
+                    const programElement = this.createProgramElement(programme);
+                    this.programsContainer.appendChild(programElement);
                 });
             }
         } catch (error) {
@@ -190,9 +174,59 @@ class ProgramEditor {
         }
     }
 
+    createProgramElement(programme) {
+        const div = document.createElement('div');
+        div.className = 'program-item';
+        div.setAttribute('data-program-id', programme.id);
+        div.innerHTML = `
+            <div class="program-info" style="cursor: pointer;">
+                <h3>${programme.name}</h3>
+                <div class="program-metadata">
+                    <span>Степен: ${programme.degree === 'bachelor' ? 'Бакалавър' : 'Магистър'}</span>
+                    <span>Години: ${programme.years_to_study}</span>
+                    <span>Вид: ${programme.type === 'full-time' ? 'Редовно' : programme.type === 'part-time' ? 'Задочно' : 'Дистанционно'}</span>
+                </div>
+            </div>
+            <div class="program-actions">
+                <button class="add-course-btn-small" title="Добави дисциплина">
+                    <span>+</span> Добави дисциплина
+                </button>
+                <button class="edit-program">Редактирай</button>
+                <button class="delete-program">Изтрий</button>
+            </div>
+        `;
+
+        // Add click event to the program info section
+        div.querySelector('.program-info').addEventListener('click', () => {
+            this.navigateToProgramCourses(programme.id);
+        });
+
+        div.querySelector('.edit-program').addEventListener('click', () => this.editProgram(programme.id));
+        div.querySelector('.delete-program').addEventListener('click', () => this.deleteProgram(programme.id));
+        div.querySelector('.add-course-btn-small').addEventListener('click', () => this.showNewCourseDialog([programme]));
+        
+        return div;
+    }
+
+    navigateToProgramCourses(programId) {
+        // Switch to courses tab
+        this.switchTab('courses');
+        
+        // Find the program section in courses tab
+        setTimeout(() => {
+            const programSection = document.querySelector(`.program-courses-section[data-program-id="${programId}"]`);
+            if (programSection) {
+                // Scroll to the program section with smooth animation
+                programSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Add highlight animation
+                programSection.style.animation = 'highlight 1s ease';
+            }
+        }, 100); // Small delay to ensure DOM is updated after tab switch
+    }
+
     async loadAllCourses() {
         try {
-            // First get all programs
             const programsResponse = await fetch('api/programmes?page=1&limit=20');
             if (!programsResponse.ok) {
                 throw new Error(`Failed to fetch programs: ${programsResponse.status}`);
@@ -202,104 +236,74 @@ class ProgramEditor {
             if (!programs || programs.length === 0) {
                 this.allCoursesContainer.innerHTML = `
                     <div class="no-courses-message">
-                        <div class="message-icon">📚</div>
-                        <h3>Няма създадени програми</h3>
-                        <p>Първо създайте програма, за да добавите дисциплини към нея.</p>
-                        <p>За да създадете програма:</p>
-                        <ol>
-                            <li>Отидете в таб "Програми"</li>
-                            <li>Натиснете бутона "Нова програма"</li>
-                            <li>Попълнете данните за програмата</li>
-                        </ol>
+                        <div class="message-content">
+                            <div class="message-icon">📚</div>
+                            <h4>Няма създадени програми</h4>
+                            <p>Първо създайте програма, за да добавите дисциплини към нея.</p>
+                            <p>За да създадете програма:</p>
+                            <ol>
+                                <li>Отидете в таб "Програми"</li>
+                                <li>Натиснете бутона "Нова програма"</li>
+                                <li>Попълнете данните за програмата</li>
+                            </ol>
+                        </div>
                     </div>
                 `;
                 return;
             }
 
-            // Then get all courses
+            const coursesContainer = document.createElement('div');
+            coursesContainer.className = 'courses-container';
+            this.allCoursesContainer.innerHTML = '';
+            this.allCoursesContainer.appendChild(coursesContainer);
+
             const coursesResponse = await fetch('api/courses');
             if (!coursesResponse.ok) {
-                console.error('Error response from courses API:', await coursesResponse.text());
                 throw new Error(`Failed to fetch courses: ${coursesResponse.status}`);
             }
             const data = await coursesResponse.json();
             const courses = Array.isArray(data) ? data : data.courses || [];
 
-            // Check if there are any courses at all
-            let totalCourses = 0;
             const coursesByProgram = {};
-            
             if (courses && courses.length > 0) {
                 courses.forEach(course => {
                     if (!coursesByProgram[course.programme_id]) {
                         coursesByProgram[course.programme_id] = [];
                     }
                     coursesByProgram[course.programme_id].push(course);
-                    totalCourses++;
                 });
             }
 
-            if (totalCourses === 0) {
-                this.allCoursesContainer.innerHTML = `
+            if (Object.keys(coursesByProgram).length === 0) {
+                coursesContainer.innerHTML = `
                     <div class="no-courses-message">
-                        <div class="message-icon">📚</div>
-                        <h3>Няма добавени дисциплини</h3>
-                        <p>В момента няма добавени дисциплини в нито една програма.</p>
-                        <p>За да добавите дисциплини:</p>
-                        <ol>
-                            <li>Отидете в таб "Програми"</li>
-                            <li>Изберете програма</li>
-                            <li>Натиснете бутона "+" за добавяне на нова дисциплина</li>
-                        </ol>
+                        <div class="message-content">
+                            <div class="message-icon">📋</div>
+                            <h4>Няма добавени дисциплини</h4>
+                            <p>В момента няма добавени дисциплини в нито една програма.</p>
+                            <p>За да добавите дисциплина:</p>
+                            <ol>
+                                <li>Изберете програма от списъка по-долу</li>
+                                <li>Натиснете бутона "Добави" в секцията на програмата</li>
+                                <li>Попълнете данните за дисциплината</li>
+                            </ol>
+                        </div>
                     </div>
                 `;
+
+                // Still show the programs even when there are no courses
+                programs.forEach(program => {
+                    const programSection = this.createProgramSection(program, coursesByProgram);
+                    coursesContainer.appendChild(programSection);
+                });
                 return;
             }
-
-            this.allCoursesContainer.innerHTML = '';
             
-            // Create sections for each program
             programs.forEach(program => {
-                const programCourses = coursesByProgram[program.id] || [];
-                const programSection = document.createElement('div');
-                programSection.className = 'program-courses-section';
-                
-                // Add program header
-                programSection.innerHTML = `
-                    <div class="program-header">
-                        <h3>${program.name}</h3>
-                    </div>
-                `;
-
-                if (programCourses.length === 0) {
-                    // Show no courses message for this program
-                    programSection.innerHTML += `
-                        <div class="no-courses-message">
-                            <p>Няма добавени дисциплини за тази програма.</p>
-                        </div>
-                    `;
-                } else {
-                    // Add courses list
-                    const coursesList = document.createElement('div');
-                    coursesList.className = 'courses-list';
-                    
-                    programCourses.forEach(course => {
-                        const courseItem = document.createElement('div');
-                        courseItem.className = 'course-list-item';
-                        courseItem.innerHTML = `
-                            <div class="course-id">ID: ${course.id}</div>
-                            <div class="course-name">${course.name}</div>
-                            <div class="course-credits">${course.credits} кредита</div>
-                            <div class="course-year">Година ${course.year_available}</div>
-                        `;
-                        coursesList.appendChild(courseItem);
-                    });
-                    
-                    programSection.appendChild(coursesList);
-                }
-
-                this.allCoursesContainer.appendChild(programSection);
+                const programSection = this.createProgramSection(program, coursesByProgram);
+                coursesContainer.appendChild(programSection);
             });
+
         } catch (error) {
             console.error('Error loading all courses:', error);
             this.allCoursesContainer.innerHTML = `
@@ -313,322 +317,159 @@ class ProgramEditor {
         }
     }
 
-    async saveProgram() {
-        try {
-            const programId = document.getElementById('programId').value;
-            const programData = {
-                name: document.getElementById('programName').value,
-                type: document.getElementById('programType').value,
-                degree: document.getElementById('educationDegree').value,
-                years_to_study: parseInt(document.getElementById('yearsToStudy').value)
-            };
-
-            const method = programId ? 'PUT' : 'POST';
-            const url = programId ? `api/programmes/${programId}` : 'api/programmes';
-
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(programData)
-            });
-
-            if (response.ok) {
-                const newProgramData = await response.json();
-                this.hideDialog(this.programDialog);
-                this.showMessage(`Програмата е ${programId ? 'обновена' : 'създадена'} успешно`, 'success');
-                
-                // Refresh both program list and courses tab
-                await Promise.all([
-                    this.loadPrograms(),
-                    this.loadAllCourses()
-                ]);
-                
-                // If this was a new program, open the course management dialog
-                if (!programId && newProgramData.id) {
-                    await this.manageCourses(newProgramData.id, programData.name);
-                }
-            } else {
-                const data = await response.json();
-                this.showValidationError(data.message || `Възникна грешка при ${programId ? 'обновяване' : 'създаване'} на програмата`);
-            }
-        } catch (error) {
-            console.error('Error saving program:', error);
-            this.showValidationError('Възникна неочаквана грешка');
-        }
-    }
-
-    async manageCourses(programId, programName) {
-        this.currentProgramId = programId;
+    createProgramSection(program, coursesByProgram) {
+        const programSection = document.createElement('div');
+        programSection.className = 'program-courses-section';
+        programSection.setAttribute('data-program-id', program.id);
         
-        // Hide programs tab content and show courses content
-        document.getElementById('programsTab').classList.remove('active');
-        document.getElementById('coursesTab').classList.add('active');
-        
-        // Update courses tab content
-        const coursesTab = document.getElementById('coursesTab');
-        coursesTab.innerHTML = `
-            <div class="courses-page">
-                <div class="program-courses-section">
-                    <div class="program-header">
-                        <h3>${programName}</h3>
-                        <div class="program-actions">
-                            <button id="addCourseBtn" class="add-course-btn">
-                                <span>+</span> Добави нова дисциплина
-                            </button>
-                            <button id="backToProgramsBtn" class="back-btn">← Обратно към програмите</button>
-                        </div>
+        // Add program header with metadata
+        programSection.innerHTML = `
+            <div class="program-header">
+                <div class="program-info">
+                    <h3>${program.name}</h3>
+                    <div class="program-metadata">
+                        <span>Степен: ${program.degree === 'bachelor' ? 'Бакалавър' : 'Магистър'}</span>
+                        <span>Години: ${program.years_to_study}</span>
+                        <span>Вид: ${program.type === 'full-time' ? 'Редовно' : program.type === 'part-time' ? 'Задочно' : 'Дистанционно'}</span>
                     </div>
-                    <div id="programCoursesList" class="courses-list"></div>
                 </div>
             </div>
         `;
 
-        // Add event listeners
-        document.getElementById('addCourseBtn').addEventListener('click', () => this.addCourse());
-        document.getElementById('backToProgramsBtn').addEventListener('click', () => {
-            this.showProgramsTab();
-            // Update active tab button
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.tab === 'programs') {
-                    btn.classList.add('active');
-                }
-            });
-        });
-        
-        try {
-            const response = await fetch(`api/programmes/${programId}/courses`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch courses');
-            }
-            const data = await response.json();
-            const courses = Array.isArray(data) ? data : data.courses || [];
+        const programCourses = coursesByProgram[program.id] || [];
+        if (programCourses.length > 0) {
+            const coursesList = document.createElement('div');
+            coursesList.className = 'courses-list';
             
-            const coursesList = document.getElementById('programCoursesList');
-            if (courses.length === 0) {
-                coursesList.innerHTML = `
-                    <div class="no-courses-message">
-                        <div class="message-icon">📚</div>
-                        <h3>Няма добавени дисциплини</h3>
-                        <p>Използвайте бутона "+" за да добавите нова дисциплина към тази програма.</p>
-                    </div>
-                `;
-            } else {
-                coursesList.innerHTML = '';
-                courses.forEach(course => {
-                    const courseItem = document.createElement('div');
-                    courseItem.className = 'course-list-item';
-                    courseItem.innerHTML = `
-                        <div class="course-info">
-                            <div class="course-id">ID: ${course.id}</div>
-                            <div class="course-name">${course.name}</div>
-                            <div class="course-credits">${course.credits} кредита</div>
-                            <div class="course-year">Година ${course.year_available}</div>
-                            ${course.depends_on && course.depends_on.length > 0 ? 
-                                `<div class="course-dependencies">Зависи от: ${course.depends_on.join(', ')}</div>` : 
-                                ''}
-                        </div>
-                        <div class="course-actions">
-                            <button class="edit-course-btn" title="Редактирай">✎</button>
-                            <button class="delete-course-btn" title="Изтрий">✕</button>
-                        </div>
-                    `;
-
-                    // Add event listeners for edit and delete buttons
-                    courseItem.querySelector('.edit-course-btn').addEventListener('click', () => 
-                        this.editCourse(course.id, course));
-                    courseItem.querySelector('.delete-course-btn').addEventListener('click', () => 
-                        this.deleteCourse(course.id));
-
-                    coursesList.appendChild(courseItem);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading courses:', error);
-            document.getElementById('programCoursesList').innerHTML = `
-                <div class="error-message">
-                    <div class="message-icon">⚠️</div>
-                    <h3>Възникна грешка при зареждане на дисциплините</h3>
-                    <p>Моля, опитайте отново по-късно.</p>
+            programCourses.forEach(course => {
+                const courseItem = this.createCourseElement(course, program.id);
+                coursesList.appendChild(courseItem);
+            });
+            
+            programSection.appendChild(coursesList);
+        } else {
+            const noCourses = document.createElement('div');
+            noCourses.className = 'no-courses-message';
+            noCourses.innerHTML = `
+                <div class="message-content">
+                    <div class="message-icon">📚</div>
+                    <h4>Няма добавени дисциплини</h4>
+                    <p>В тази програма все още няма добавени дисциплини.</p>
+                    <p>Натиснете бутона "Добави" за да добавите нова дисциплина.</p>
                 </div>
             `;
-        }
-    }
-
-    async editCourse(courseId, courseData) {
-        // Show the course dialog with pre-filled data
-        this.showDialog(this.newCourseDialog);
-        
-        // Fill the form with existing course data
-        document.getElementById('newCourseName').value = courseData.name || '';
-        document.getElementById('newCourseCredits').value = courseData.credits || '';
-        document.getElementById('newCourseYear').value = courseData.year_available || '';
-        document.getElementById('newCourseDependsOn').value = 
-            courseData.depends_on && courseData.depends_on.length > 0 ? 
-            courseData.depends_on[0] : '';
-        
-        // Update dialog title
-        this.newCourseDialog.querySelector('h2').textContent = 'Редактиране на дисциплина';
-        
-        // Update form submission handler
-        const form = document.getElementById('newCourseForm');
-        const originalSubmitHandler = form.onsubmit;
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                const updatedData = {
-                    name: document.getElementById('newCourseName').value.trim(),
-                    credits: parseInt(document.getElementById('newCourseCredits').value),
-                    year_available: parseInt(document.getElementById('newCourseYear').value),
-                    description: document.getElementById('newCourseName').value.trim(),
-                    depends_on: document.getElementById('newCourseDependsOn').value.trim() ? 
-                        [parseInt(document.getElementById('newCourseDependsOn').value)] : []
-                };
-
-                const response = await fetch(`api/programmes/${this.currentProgramId}/courses/${courseId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updatedData)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to update course');
-                }
-
-                this.hideDialog(this.newCourseDialog);
-                this.showMessage('Дисциплината е обновена успешно', 'success');
-                
-                // Refresh the view
-                await this.manageCourses(this.currentProgramId, 
-                    document.querySelector('.courses-header h2').textContent.split(': ')[1]);
-            } catch (error) {
-                console.error('Error updating course:', error);
-                this.showValidationError('Възникна грешка при обновяване на дисциплината');
-            }
-        };
-    }
-
-    async deleteCourse(courseId) {
-        if (!confirm('Сигурни ли сте, че искате да изтриете тази дисциплина?')) {
-            return;
+            programSection.appendChild(noCourses);
         }
 
-        try {
-            const response = await fetch(`api/programmes/${this.currentProgramId}/courses/${courseId}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete course');
-            }
-
-            this.showMessage('Дисциплината е изтрита успешно', 'success');
+        // Add "Add new course" button
+        const addCourseButton = document.createElement('div');
+        addCourseButton.className = 'add-course-container';
+        addCourseButton.innerHTML = `
+            <button class="add-course-btn" data-program-id="${program.id}">
+                <span>+</span> Добави
+            </button>
+        `;
+        
+        addCourseButton.querySelector('.add-course-btn').addEventListener('click', () => 
+            this.showNewCourseDialog([program]));
             
-            // Refresh both views
-            await Promise.all([
-                this.manageCourses(this.currentProgramId, 
-                    document.querySelector('.courses-header h2').textContent.split(': ')[1]),
-                this.loadAllCourses()
-            ]);
-        } catch (error) {
-            console.error('Error deleting course:', error);
-            this.showValidationError('Възникна грешка при изтриване на дисциплината');
-        }
+        programSection.appendChild(addCourseButton);
+
+        return programSection;
     }
 
-    showProgramsTab() {
-        // Show programs tab and hide courses tab
-        document.getElementById('programsTab').classList.add('active');
-        document.getElementById('coursesTab').classList.remove('active');
+    createCourseElement(course, programId) {
+        const courseItem = document.createElement('div');
+        courseItem.className = 'course-list-item';
+        courseItem.setAttribute('data-course-id', course.id);
+
+        // Safely handle dependencies display
+        const dependenciesHtml = course.depends_on && Array.isArray(course.depends_on) && course.depends_on.length > 0
+            ? `<span class="course-dependencies">Зависи от: ${course.depends_on.join(', ')}</span>`
+            : '';
+
+        courseItem.innerHTML = `
+            <div class="course-info">
+                <div class="course-header">
+                    <span class="course-name">${course.name}</span>
+                </div>
+                <div class="course-details">
+                    <span>ID: ${course.id}</span>
+                    <span>Кредити: ${course.credits}</span>
+                    <span>Година: ${course.year_available}</span>
+                    ${dependenciesHtml}
+                </div>
+            </div>
+            <div class="course-actions">
+                <button class="edit-course" title="Редактирай" data-course-id="${course.id}" data-program-id="${programId}">Редактирай</button>
+                <button class="delete-course-btn" title="Изтрий" data-course-id="${course.id}" data-program-id="${programId}">Изтрий</button>
+            </div>
+        `;
+
+        // Add event listeners
+        courseItem.querySelector('.edit-course').addEventListener('click', () => 
+            this.editCourse(course.id, programId));
+        courseItem.querySelector('.delete-course-btn').addEventListener('click', () => 
+            this.deleteCourse(course.id, programId));
+
+        return courseItem;
+    }
+
+    showNewCourseDialog(programs) {
+        // Reset the form
+        document.getElementById('newCourseForm').reset();
         
-        // Update active tab button
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.tab === 'programs') {
-                btn.classList.add('active');
-            }
+        // Populate programs dropdown
+        const programSelect = document.getElementById('newCourseProgramme');
+        programSelect.innerHTML = '<option value="">Изберете програма</option>';
+        programs.forEach(program => {
+            const option = document.createElement('option');
+            option.value = program.id;
+            option.textContent = program.name;
+            programSelect.appendChild(option);
         });
         
-        // Refresh programs list
-        this.loadPrograms();
-    }
-
-    async saveCourseChanges() {
-        if (!this.currentProgramId) {
-            this.showValidationError('Невалидна програма');
-            return;
-        }
-
-        try {
-            const courseElements = document.querySelectorAll('.course-item');
-            const courses = Array.from(courseElements).map(item => {
-                const name = item.querySelector('.course-name').value.trim();
-                const credits = parseInt(item.querySelector('.course-credits').value);
-                const year = parseInt(item.querySelector('.course-year').value);
-                const dependsOnValue = item.querySelector('.depends-on-id').value.trim();
-
-                // Validate required fields
-                if (!name) {
-                    throw new Error('Името на дисциплината е задължително');
-                }
-                if (isNaN(credits) || credits < 1 || credits > 9) {
-                    throw new Error('Кредитите трябва да са между 1 и 9');
-                }
-                if (!year) {
-                    throw new Error('Изберете година на обучение');
-                }
-
-                return {
-                    id: parseInt(item.dataset.courseId),
-                    name: name,
-                    credits: credits,
-                    year_available: year,
-                    depends_on: dependsOnValue ? parseInt(dependsOnValue) : null,
-                    programme_id: this.currentProgramId
-                };
-            });
-
-            const response = await fetch(`api/programmes/${this.currentProgramId}/courses`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ courses })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Възникна грешка при запазване на дисциплините');
-            }
-
-            this.showMessage('Дисциплините са запазени успешно', 'success');
-            
-            // Refresh the courses list
-            await this.manageCourses(this.currentProgramId, document.querySelector('.courses-header h2').textContent.split(': ')[1]);
-        } catch (error) {
-            console.error('Error saving courses:', error);
-            this.showValidationError(error.message || 'Възникна неочаквана грешка при запазване на дисциплините');
-        }
-    }
-
-    addCourse() {
-        // Show the new course dialog
         this.showDialog(this.newCourseDialog);
-        
-        // Reset form and clear all fields
-        document.getElementById('newCourseForm').reset();
+    }
+
+    async editCourse(courseId, programId) {
+        try {
+            const response = await fetch(`api/programmes/${programId}/courses/${courseId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch course details');
+            }
+            
+            const course = await response.json();
+            
+            // Update form fields
+            document.getElementById('courseId').value = courseId;
+            document.getElementById('courseDialogTitle').textContent = 'Редактиране на дисциплина';
+            document.getElementById('newCourseName').value = course.name || '';
+            document.getElementById('newCourseCredits').value = course.credits || '';
+            document.getElementById('newCourseYear').value = course.year_available || '';
+            document.getElementById('newCourseProgramme').value = programId;
+            document.getElementById('newCourseDependsOn').value = course.depends_on && course.depends_on.length > 0 ? course.depends_on[0] : '';
+            
+            // Disable program selection when editing
+            document.getElementById('newCourseProgramme').disabled = true;
+            
+            this.showDialog(this.newCourseDialog);
+        } catch (error) {
+            console.error('Error loading course:', error);
+            this.showMessage('Грешка при зареждане на дисциплината', 'error');
+        }
     }
 
     async saveNewCourse(e) {
         e.preventDefault();
         
         try {
+            const courseId = document.getElementById('courseId').value;
             const name = document.getElementById('newCourseName').value.trim();
             const credits = parseInt(document.getElementById('newCourseCredits').value);
             const yearAvailable = parseInt(document.getElementById('newCourseYear').value);
-            const dependsOn = document.getElementById('newCourseDependsOn').value.trim();
+            const programId = document.getElementById('newCourseProgramme').value;
+            const dependsOnInput = document.getElementById('newCourseDependsOn').value.trim();
 
             // Validate required fields
             if (!name) {
@@ -640,163 +481,397 @@ class ProgramEditor {
             if (!yearAvailable) {
                 throw new Error('Изберете година на обучение');
             }
+            if (!programId) {
+                throw new Error('Изберете програма');
+            }
+
+            // Handle dependencies
+            let dependsOn = [];
+            if (dependsOnInput) {
+                const dependencyId = parseInt(dependsOnInput);
+                if (isNaN(dependencyId)) {
+                    throw new Error('Невалиден ID на зависима дисциплина');
+                }
+                
+                // Verify the dependency exists
+                try {
+                    const dependencyResponse = await fetch(`api/courses/${dependencyId}`);
+                    if (!dependencyResponse.ok) {
+                        throw new Error('Зависимата дисциплина не съществува');
+                    }
+                    dependsOn = [dependencyId];
+                } catch (error) {
+                    throw new Error('Зависимата дисциплина не съществува или е невалидна');
+                }
+            }
 
             const courseData = {
                 name: name,
                 credits: credits,
                 year_available: yearAvailable,
-                description: name, // Using name as description for now
-                depends_on: dependsOn ? [parseInt(dependsOn)] : [] // API expects an array
+                description: name,
+                depends_on: dependsOn
             };
 
-            // Send request to create the course
-            const response = await fetch(`api/programmes/${this.currentProgramId}/courses`, {
-                method: 'POST',
+            // Determine if this is a create or update operation
+            const method = courseId ? 'PUT' : 'POST';
+            const url = courseId 
+                ? `api/programmes/${programId}/courses/${courseId}`
+                : `api/programmes/${programId}/courses`;
+
+            const response = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(courseData)
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Възникна грешка при създаване на дисциплината');
+            let responseData;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                responseData = await response.json();
             }
 
-            // Hide the dialog
-            this.hideDialog(this.newCourseDialog);
-            
-            // Show success message
-            this.showMessage('Дисциплината е добавена успешно', 'success');
+            if (!response.ok) {
+                throw new Error(responseData?.error || `Възникна грешка при ${courseId ? 'обновяване' : 'създаване'} на дисциплината`);
+            }
 
-            // Refresh both the courses view and all courses tab
-            await Promise.all([
-                this.manageCourses(this.currentProgramId, document.querySelector('.courses-header h2').textContent.split(': ')[1]),
-                this.loadAllCourses()
-            ]);
+            // Prepare the course data for UI update
+            const courseForUI = {
+                id: courseId || responseData?.id || responseData?.course_id,
+                name: name,
+                credits: credits,
+                year_available: yearAvailable,
+                depends_on: dependsOn
+            };
+
+            // Update UI immediately
+            const programSection = document.querySelector(`.program-courses-section[data-program-id="${programId}"]`);
+            if (programSection) {
+                if (courseId) {
+                    // Update existing course
+                    const existingCourse = programSection.querySelector(`[data-course-id="${courseId}"]`);
+                    if (existingCourse) {
+                        const newCourseElement = this.createCourseElement(courseForUI, programId);
+                        existingCourse.replaceWith(newCourseElement);
+                    }
+                } else {
+                    // Add new course
+                    let coursesList = programSection.querySelector('.courses-list');
+                    const noCoursesMessage = programSection.querySelector('.no-courses-message');
+
+                    if (!coursesList) {
+                        coursesList = document.createElement('div');
+                        coursesList.className = 'courses-list';
+                        
+                        const addCourseContainer = programSection.querySelector('.add-course-container');
+                        if (addCourseContainer) {
+                            programSection.insertBefore(coursesList, addCourseContainer);
+                        } else {
+                            programSection.appendChild(coursesList);
+                        }
+                    }
+
+                    if (noCoursesMessage) {
+                        noCoursesMessage.remove();
+                    }
+
+                    const courseElement = this.createCourseElement(courseForUI, programId);
+                    coursesList.appendChild(courseElement);
+                    courseElement.style.animation = 'fadeIn 0.3s ease-out';
+                }
+
+                // Only hide dialog and clear form if successful
+                this.hideDialog(this.newCourseDialog);
+                this.showMessage(`Дисциплината е ${courseId ? 'обновена' : 'добавена'} успешно`, 'success');
+                document.getElementById('newCourseForm').reset();
+                document.getElementById('courseId').value = '';
+                document.getElementById('newCourseProgramme').disabled = false;
+            } else {
+                throw new Error('Грешка при обновяване на интерфейса');
+            }
+
         } catch (error) {
-            console.error('Error creating course:', error);
-            this.showValidationError(error.message || 'Възникна грешка при създаване на дисциплината');
+            console.error('Error saving course:', error);
+            this.showValidationError(error.message, this.newCourseDialog.querySelector('.modal-content'));
         }
     }
 
-    addCourseToUI(courseData) {
-        const courseElement = this.courseTemplate.content.cloneNode(true);
-        const courseItem = courseElement.querySelector('.course-item');
-        
-        courseItem.dataset.courseId = courseData.id;
-        courseItem.innerHTML = `
-            <div class="course-header">
-                <span class="course-id">ID: <span class="course-id-value">${courseData.id}</span></span>
-            </div>
-            <div class="course-content">
-                <div class="form-group">
-                    <label>Име на дисциплината</label>
-                    <input type="text" class="course-name" value="${courseData.name || ''}" required>
-                </div>
-                <div class="form-group">
-                    <label>Кредити</label>
-                    <input type="number" class="course-credits" value="${courseData.credits || 1}" min="1" max="9" required>
-                </div>
-                <div class="form-group">
-                    <label>Година</label>
-                    <select class="course-year" required>
-                        ${[1, 2, 3, 4, 5].map(year => 
-                            `<option value="${year}" ${(courseData.year_available || 1) === year ? 'selected' : ''}>
-                                ${year}-ва година
-                            </option>`
-                        ).join('')}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Зависи от (ID на друга дисциплина)</label>
-                    <input type="number" class="depends-on-id" value="${courseData.depends_on || ''}" min="1">
-                </div>
-            </div>
-            <div class="course-actions">
-                <button class="remove-course" title="Изтрий дисциплината">✕</button>
-            </div>
-        `;
-        
-        // Add validation for credits
-        const creditsInput = courseItem.querySelector('.course-credits');
-        creditsInput.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            if (value < 1 || value > 9) {
-                creditsInput.setCustomValidity('Кредитите трябва да са между 1 и 9');
-            } else {
-                creditsInput.setCustomValidity('');
-            }
-            creditsInput.reportValidity();
-        });
+    async deleteCourse(courseId, programId) {
+        if (!confirm('Сигурни ли сте, че искате да изтриете тази дисциплина?')) {
+            return;
+        }
 
-        // Add validation for course name
-        const nameInput = courseItem.querySelector('.course-name');
-        nameInput.addEventListener('input', (e) => {
-            if (e.target.value.trim() === '') {
-                nameInput.setCustomValidity('Името на дисциплината е задължително');
-            } else {
-                nameInput.setCustomValidity('');
-            }
-            nameInput.reportValidity();
-        });
-        
-        // Add remove course handler
-        courseItem.querySelector('.remove-course').addEventListener('click', (e) => {
-            const courseElement = e.target.closest('.course-item');
-            courseElement.remove();
-        });
+        try {
+            const response = await fetch(`api/programmes/${programId}/courses/${courseId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
 
-        this.coursesList.appendChild(courseItem);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete course');
+            }
+
+            // Update UI immediately
+            const courseElement = document.querySelector(`[data-course-id="${courseId}"]`);
+            if (courseElement) {
+                // Add fade-out animation
+                courseElement.style.animation = 'fadeOut 0.3s ease-out';
+                
+                // Wait for animation to complete before removing
+                setTimeout(() => {
+                    courseElement.remove();
+                    
+                    // Check if this was the last course in the list
+                    const programSection = document.querySelector(`.program-courses-section[data-program-id="${programId}"]`);
+                    if (programSection) {
+                        const coursesList = programSection.querySelector('.courses-list');
+                        if (coursesList && !coursesList.children.length) {
+                            // If no courses left, show the no courses message
+                            coursesList.remove();
+                            const noCoursesMessage = document.createElement('div');
+                            noCoursesMessage.className = 'no-courses-message';
+                            noCoursesMessage.innerHTML = `
+                                <div class="message-content">
+                                    <div class="message-icon">📚</div>
+                                    <h4>Няма добавени дисциплини</h4>
+                                    <p>В тази програма все още няма добавени дисциплини.</p>
+                                    <p>Натиснете бутона "Добави" за да добавите нова дисциплина.</p>
+                                </div>
+                            `;
+                            const addCourseContainer = programSection.querySelector('.add-course-container');
+                            programSection.insertBefore(noCoursesMessage, addCourseContainer);
+                        }
+                    }
+                }, 300);
+            }
+
+            this.showMessage('Дисциплината е изтрита успешно', 'success');
+        } catch (error) {
+            console.error('Error deleting course:', error);
+            this.showMessage(error.message || 'Възникна грешка при изтриване на дисциплината', 'error');
+        }
+    }
+
+    async saveProgram() {
+        try {
+            const programId = document.getElementById('programId').value;
+            const programData = {
+                name: document.getElementById('programName').value.trim(),
+                type: document.getElementById('programType').value,
+                degree: document.getElementById('educationDegree').value,
+                years_to_study: parseInt(document.getElementById('yearsToStudy').value)
+            };
+
+            // Validate required fields
+            if (!programData.name) {
+                throw new Error('Името на програмата е задължително');
+            }
+            if (!programData.years_to_study || programData.years_to_study < 3 || programData.years_to_study > 6) {
+                throw new Error('Годините на обучение трябва да са между 3 и 6');
+            }
+            if (!programData.type || !['full-time', 'part-time', 'distance'].includes(programData.type)) {
+                throw new Error('Невалиден тип на обучение');
+            }
+            if (!programData.degree || !['bachelor', 'master'].includes(programData.degree)) {
+                throw new Error('Невалидна образователна степен');
+            }
+
+            const method = programId ? 'PUT' : 'POST';
+            const url = programId ? `api/programmes/${programId}` : 'api/programmes';
+
+            const response = await fetch(url, {
+                method,
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(programData)
+            });
+
+            let responseData;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                responseData = await response.json();
+            }
+
+            if (!response.ok) {
+                throw new Error(responseData?.error || `Възникна грешка при ${programId ? 'обновяване' : 'създаване'} на програмата`);
+            }
+
+            // Update UI immediately
+            if (programId) {
+                // Update existing program in programs tab
+                const programItem = document.querySelector(`[data-program-id="${programId}"]`);
+                if (programItem) {
+                    const programInfo = programItem.querySelector('.program-info');
+                    programInfo.innerHTML = `
+                        <h3>${programData.name}</h3>
+                        <div class="program-metadata">
+                            <span>Степен: ${programData.degree === 'bachelor' ? 'Бакалавър' : 'Магистър'}</span>
+                            <span>Години: ${programData.years_to_study}</span>
+                            <span>Вид: ${programData.type === 'full-time' ? 'Редовно' : programData.type === 'part-time' ? 'Задочно' : 'Дистанционно'}</span>
+                        </div>
+                    `;
+                }
+
+                // Update program in courses tab
+                const programSection = document.querySelector(`.program-courses-section[data-program-id="${programId}"]`);
+                if (programSection) {
+                    const programHeader = programSection.querySelector('.program-info');
+                    programHeader.innerHTML = `
+                        <h3>${programData.name}</h3>
+                        <div class="program-metadata">
+                            <span>Степен: ${programData.degree === 'bachelor' ? 'Бакалавър' : 'Магистър'}</span>
+                            <span>Години: ${programData.years_to_study}</span>
+                            <span>Вид: ${programData.type === 'full-time' ? 'Редовно' : programData.type === 'part-time' ? 'Задочно' : 'Дистанционно'}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            // Only hide dialog and clear form if successful
+            this.hideDialog(this.programDialog);
+            this.showMessage(`Програмата е ${programId ? 'обновена' : 'създадена'} успешно`, 'success');
+            this.programBasicForm.reset();
+            document.getElementById('programId').value = '';
+
+            // Refresh both views to ensure consistency
+            await Promise.all([
+                this.loadPrograms(),
+                this.loadAllCourses()
+            ]);
+        } catch (error) {
+            console.error('Error saving program:', error);
+            this.showValidationError(error.message, this.programDialog.querySelector('.modal-content'));
+            // Don't hide dialog or clear form on error
+        }
     }
 
     showMessage(message, type = 'success') {
         const messageContainer = document.createElement('div');
-        messageContainer.className = `${type}-message`;
+        messageContainer.className = `message ${type}-message`;
         messageContainer.textContent = message;
         
         const icon = document.createElement('span');
         icon.textContent = type === 'success' ? '✓' : '⚠';
         messageContainer.insertBefore(icon, messageContainer.firstChild);
         
+        // Remove any existing messages
+        const existingMessages = document.querySelectorAll('.message');
+        existingMessages.forEach(msg => msg.remove());
+        
         document.querySelector('.container').insertBefore(messageContainer, document.querySelector('.programs-list'));
         
         setTimeout(() => messageContainer.remove(), 3000);
     }
 
-    showValidationError(message) {
+    showValidationError(message, targetElement = null) {
+        // Remove any existing validation errors first
+        const existingErrors = document.querySelectorAll('.validation-error');
+        existingErrors.forEach(err => err.remove());
+
         const errorDiv = document.createElement('div');
         errorDiv.className = 'validation-error';
         errorDiv.textContent = message;
         
-        const targetContainer = this.courseDialog.classList.contains('hidden') ? 
-            this.programDialog.querySelector('.modal-content') : 
-            this.courseDialog.querySelector('.modal-content');
-        
-        targetContainer.insertBefore(errorDiv, targetContainer.firstChild);
-        setTimeout(() => errorDiv.remove(), 3000);
+        if (targetElement) {
+            targetElement.insertBefore(errorDiv, targetElement.firstChild);
+        } else {
+            const modalContent = document.querySelector('.modal-content');
+            if (modalContent && modalContent.isConnected) {
+                modalContent.insertBefore(errorDiv, modalContent.firstChild);
+            } else {
+                // If no modal is open, show as a general message
+                this.showMessage(message, 'error');
+                return;
+            }
+        }
     }
 
     async deleteProgram(id) {
+        if (!confirm('Сигурни ли сте, че искате да изтриете тази програма? Всички дисциплини в нея ще бъдат изтрити.')) {
+            return;
+        }
+
         try {
-            await fetch(`api/programmes/${id}`, { method: 'DELETE' });
+            const response = await fetch(`api/programmes/${id}`, { 
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Грешка при изтриване на програмата');
+            }
+
+            // Update UI immediately in programs tab
+            const programItem = document.querySelector(`.program-item[data-program-id="${id}"]`);
+            if (programItem) {
+                programItem.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    programItem.remove();
+                    
+                    // Check if this was the last program
+                    const programsContainer = document.getElementById('programsContainer');
+                    if (!programsContainer.children.length) {
+                        const noProgramsMessage = document.getElementById('noProgramsMessage');
+                        if (noProgramsMessage) {
+                            noProgramsMessage.style.display = 'flex';
+                        }
+                        programsContainer.style.display = 'none';
+                    }
+                }, 300);
+            }
+
+            // Update UI immediately in courses tab
+            const programSection = document.querySelector(`.program-courses-section[data-program-id="${id}"]`);
+            if (programSection) {
+                programSection.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    programSection.remove();
+                    
+                    // Check if this was the last program in courses tab
+                    const coursesContainer = document.querySelector('.courses-container');
+                    if (coursesContainer && !coursesContainer.children.length) {
+                        coursesContainer.innerHTML = `
+                            <div class="no-courses-message">
+                                <div class="message-content">
+                                    <div class="message-icon">📚</div>
+                                    <h4>Няма създадени програми</h4>
+                                    <p>Първо създайте програма, за да добавите дисциплини към нея.</p>
+                                    <p>За да създадете програма:</p>
+                                    <ol>
+                                        <li>Отидете в таб "Програми"</li>
+                                        <li>Натиснете бутона "Нова програма"</li>
+                                        <li>Попълнете данните за програмата</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }, 300);
+            }
+
             this.showMessage('Програмата е изтрита успешно', 'success');
-            
-            // Refresh both program list and courses tab
-            await Promise.all([
-                this.loadPrograms(),
-                this.loadAllCourses()
-            ]);
         } catch (error) {
-            this.showValidationError('Грешка при изтриване на програмата');
+            console.error('Error deleting program:', error);
+            this.showMessage(error.message || 'Възникна грешка при изтриване на програмата', 'error');
         }
     }
 
     async editProgram(id) {
         try {
             const response = await fetch(`api/programmes/${id}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch program details');
+            }
+            
             const programme = await response.json();
             
+            // Update form fields
             document.getElementById('programId').value = id;
             document.getElementById('programDialogTitle').textContent = 'Редактиране на програма';
             document.getElementById('programName').value = programme.name || '';
@@ -807,7 +882,7 @@ class ProgramEditor {
             this.showDialog(this.programDialog);
         } catch (error) {
             console.error('Error loading program:', error);
-            this.showValidationError('Грешка при зареждане на програмата');
+            this.showMessage('Грешка при зареждане на програмата', 'error');
         }
     }
 }

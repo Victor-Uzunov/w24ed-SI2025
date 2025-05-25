@@ -49,6 +49,7 @@ class Database {
     }
 
     private function createTables() {
+        // Create programmes table if not exists
         $this->pdo->exec('
             CREATE TABLE IF NOT EXISTS programmes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,6 +59,20 @@ class Database {
             )
         ');
 
+        // Add degree column if it doesn't exist
+        try {
+            $this->pdo->query('SELECT degree FROM programmes LIMIT 1');
+        } catch (PDOException $e) {
+            // Column doesn't exist, add it
+            $this->pdo->exec('
+                ALTER TABLE programmes 
+                ADD COLUMN degree TEXT NOT NULL 
+                CHECK (degree IN ("bachelor", "master")) 
+                DEFAULT "bachelor"
+            ');
+        }
+
+        // Create courses table if not exists
         $this->pdo->exec('
             CREATE TABLE IF NOT EXISTS courses (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,6 +86,7 @@ class Database {
             )
         ');
 
+        // Create course_dependencies table if not exists
         $this->pdo->exec('
             CREATE TABLE IF NOT EXISTS course_dependencies (
                 course_id INTEGER NOT NULL,

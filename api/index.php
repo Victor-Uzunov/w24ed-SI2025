@@ -44,8 +44,13 @@ try {
                 echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
             } elseif ($method === 'POST') {
                 // POST /programmes
-                $stmt = $pdo->prepare('INSERT INTO programmes (name, years_to_study, type) VALUES (?, ?, ?)');
-                $stmt->execute([$input['name'], $input['years_to_study'], $input['type']]);
+                $stmt = $pdo->prepare('INSERT INTO programmes (name, years_to_study, type, degree) VALUES (?, ?, ?, ?)');
+                $stmt->execute([
+                    $input['name'],
+                    $input['years_to_study'],
+                    $input['type'],
+                    $input['degree'] ?? 'bachelor'
+                ]);
                 $input['id'] = $pdo->lastInsertId();
                 http_response_code(201);
                 echo json_encode($input);
@@ -76,6 +81,7 @@ try {
                     'name' => $rows[0]['name'],
                     'years_to_study' => $rows[0]['years_to_study'],
                     'type' => $rows[0]['type'],
+                    'degree' => $rows[0]['degree'] ?? 'bachelor',
                     'courses' => []
                 ];
 
@@ -97,6 +103,66 @@ try {
                 $stmt = $pdo->prepare('DELETE FROM programmes WHERE id = ?');
                 $stmt->execute([$programmeId]);
                 http_response_code(204);
+            } elseif ($method === 'PUT') {
+                // PUT /programmes/{id}
+                try {
+                    // First check if program exists
+                    $checkStmt = $pdo->prepare('SELECT id FROM programmes WHERE id = ?');
+                    $checkStmt->execute([$programmeId]);
+                    if (!$checkStmt->fetch()) {
+                        http_response_code(404);
+                        echo json_encode(['error' => 'Programme not found']);
+                        exit;
+                    }
+
+                    // Validate input
+                    if (empty($input['name'])) {
+                        throw new Exception('Name is required');
+                    }
+                    if (!isset($input['years_to_study']) || $input['years_to_study'] < 3 || $input['years_to_study'] > 6) {
+                        throw new Exception('Years to study must be between 3 and 6');
+                    }
+                    if (empty($input['type']) || !in_array($input['type'], ['full-time', 'part-time', 'distance'])) {
+                        throw new Exception('Invalid type value');
+                    }
+                    if (!empty($input['degree']) && !in_array($input['degree'], ['bachelor', 'master'])) {
+                        throw new Exception('Invalid degree value');
+                    }
+
+                    // Update the program
+                    $stmt = $pdo->prepare('
+                        UPDATE programmes 
+                        SET name = ?, 
+                            years_to_study = ?, 
+                            type = ?, 
+                            degree = ? 
+                        WHERE id = ?
+                    ');
+                    
+                    $result = $stmt->execute([
+                        $input['name'],
+                        $input['years_to_study'],
+                        $input['type'],
+                        $input['degree'] ?? 'bachelor',
+                        $programmeId
+                    ]);
+
+                    if ($result === false) {
+                        throw new Exception('Failed to update programme');
+                    }
+
+                    // Get the updated program
+                    $stmt = $pdo->prepare('SELECT * FROM programmes WHERE id = ?');
+                    $stmt->execute([$programmeId]);
+                    $updatedProgram = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    http_response_code(200);
+                    echo json_encode($updatedProgram);
+                } catch (Exception $e) {
+                    http_response_code(400);
+                    echo json_encode(['error' => $e->getMessage()]);
+                    exit;
+                }
             }
         } elseif (count($uri) === 3 && $uri[2] === 'courses') {
             $programmeId = $uri[1];

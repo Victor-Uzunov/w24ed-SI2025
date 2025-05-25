@@ -2,7 +2,8 @@ CREATE TABLE programmes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL UNIQUE,
     years_to_study TINYINT UNSIGNED NOT NULL CHECK (years_to_study BETWEEN 3 AND 6),
-    type ENUM('full-time','part-time','distance') NOT NULL
+    type ENUM('full-time','part-time','distance') NOT NULL,
+    degree ENUM('bachelor','master') NOT NULL DEFAULT 'bachelor'
 );
 
 CREATE TABLE courses (
@@ -28,4 +29,22 @@ CREATE TABLE course_dependencies (
     CONSTRAINT fk_dep_target
         FOREIGN KEY (depends_on_id) REFERENCES courses(id)
         ON DELETE CASCADE
-); 
+);
+
+-- Migration for existing databases
+-- Only run this if you're updating an existing database
+-- DELIMITER //
+-- CREATE PROCEDURE add_degree_column()
+-- BEGIN
+--     IF NOT EXISTS (
+--         SELECT * FROM INFORMATION_SCHEMA.COLUMNS 
+--         WHERE TABLE_NAME = 'programmes' 
+--         AND COLUMN_NAME = 'degree'
+--     ) THEN
+--         ALTER TABLE programmes 
+--         ADD COLUMN degree ENUM('bachelor','master') NOT NULL DEFAULT 'bachelor';
+--     END IF;
+-- END //
+-- DELIMITER ;
+-- CALL add_degree_column();
+-- DROP PROCEDURE IF EXISTS add_degree_column; 
