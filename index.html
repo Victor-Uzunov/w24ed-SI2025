@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bachelor Curriculum Manager</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="header-title">Bachelor Curriculum Manager</h1>
+            <div class="header-actions">
+                <button id="helpBtn" class="btn">
+                    <i class="fas fa-question-circle"></i>
+                    Help
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <div class="panel programmes-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Programmes</h2>
+                    <button id="newProgrammeBtn" class="btn primary">
+                        <i class="fas fa-plus"></i>
+                        New Programme
+                    </button>
+                </div>
+                
+                <div id="programmesList" class="list-container">
+                    <!-- Programmes will be listed here -->
+                </div>
+
+                <div id="programmeForm" class="form-container hidden">
+                    <h3>Create New Programme</h3>
+                    <form id="createProgrammeForm">
+                        <div class="form-group">
+                            <label for="programmeName">Name:</label>
+                            <input type="text" id="programmeName" name="name" required minlength="3" maxlength="150" placeholder="e.g., Computer Science">
+                            <span class="error" data-for="name"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="programmeYears">Years to Study:</label>
+                            <input type="number" id="programmeYears" name="years_to_study" required min="3" max="6" placeholder="3-6 years">
+                            <span class="error" data-for="years_to_study"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="programmeType">Type:</label>
+                            <select id="programmeType" name="type" required>
+                                <option value="">Select type...</option>
+                                <option value="full-time">Full-time</option>
+                                <option value="part-time">Part-time</option>
+                                <option value="distance">Distance</option>
+                            </select>
+                            <span class="error" data-for="type"></span>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn primary">
+                                <i class="fas fa-save"></i>
+                                Create
+                            </button>
+                            <button type="button" class="btn" id="cancelProgrammeBtn">
+                                <i class="fas fa-times"></i>
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel courses-panel">
+                <div id="noProgrammeSelected" class="message">
+                    <i class="fas fa-arrow-left fa-2x"></i>
+                    <p>Select a programme to manage its courses</p>
+                </div>
+
+                <div id="courseContent" class="hidden">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Courses for <span id="selectedProgrammeName"></span></h2>
+                        <button id="newCourseBtn" class="btn primary">
+                            <i class="fas fa-plus"></i>
+                            New Course
+                        </button>
+                    </div>
+
+                    <div id="coursesList" class="list-container">
+                        <!-- Courses will be listed here -->
+                    </div>
+
+                    <div id="courseForm" class="form-container hidden">
+                        <h3>Create New Course</h3>
+                        <form id="createCourseForm">
+                            <div class="form-group">
+                                <label for="courseName">Name:</label>
+                                <input type="text" id="courseName" name="name" required minlength="3" maxlength="150" placeholder="e.g., Introduction to Programming">
+                                <span class="error" data-for="name"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="courseCredits">Credits:</label>
+                                <input type="number" id="courseCredits" name="credits" required min="1" max="15" placeholder="1-15 credits">
+                                <span class="error" data-for="credits"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="courseYear">Available Year:</label>
+                                <input type="number" id="courseYear" name="available_year" required min="1" placeholder="Study year">
+                                <span class="error" data-for="available_year"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="courseDescription">Description:</label>
+                                <textarea id="courseDescription" name="description" rows="3" placeholder="Course description (optional)"></textarea>
+                                <span class="error" data-for="description"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="coursePrerequisites">Prerequisites:</label>
+                                <select id="coursePrerequisites" name="prerequisites" multiple>
+                                    <!-- Available courses will be listed here -->
+                                </select>
+                                <span class="help-text">Hold Ctrl/Cmd to select multiple courses</span>
+                                <span class="error" data-for="prerequisites"></span>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn primary">
+                                    <i class="fas fa-save"></i>
+                                    Create
+                                </button>
+                                <button type="button" class="btn" id="cancelCourseBtn">
+                                    <i class="fas fa-times"></i>
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="confirmDialog" class="dialog-overlay hidden">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h3 class="dialog-title">Confirm Action</h3>
+            </div>
+            <div class="dialog-content">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="dialog-actions">
+                <button id="confirmYes" class="btn danger">
+                    <i class="fas fa-check"></i>
+                    Yes
+                </button>
+                <button id="confirmNo" class="btn">
+                    <i class="fas fa-times"></i>
+                    No
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="helpDialog" class="dialog-overlay hidden">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h3 class="dialog-title">Help Guide</h3>
+            </div>
+            <div class="dialog-content">
+                <h4>Managing Programmes</h4>
+                <ul>
+                    <li>Click "New Programme" to create a programme</li>
+                    <li>Fill in the required details (name, years, type)</li>
+                    <li>Click on a programme to view its courses</li>
+                    <li>Use the delete button to remove a programme</li>
+                </ul>
+
+                <h4>Managing Courses</h4>
+                <ul>
+                    <li>Select a programme first</li>
+                    <li>Click "New Course" to add a course</li>
+                    <li>Fill in course details</li>
+                    <li>Select prerequisites from earlier years</li>
+                    <li>Use the delete button to remove a course</li>
+                </ul>
+            </div>
+            <div class="dialog-actions">
+                <button id="closeHelpBtn" class="btn primary">
+                    <i class="fas fa-check"></i>
+                    Got it
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 

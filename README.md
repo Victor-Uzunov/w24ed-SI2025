@@ -1,299 +1,245 @@
-# FMI Course Program Editor
+# Bachelor Curriculum Manager
 
-A simple web application for creating and managing university course programs at FMI. This application allows faculty administrators and program coordinators to manage courses and their basic information.
+A web-based application for managing bachelor degree programmes and their courses. The application allows users to create and manage bachelor programmes, add courses to these programmes, and define course dependencies.
 
 ## Features
 
-### Core Functionality
-- Create and edit course programs for Bachelor's and Master's degrees
-- Add, edit, and remove courses with detailed information
-- Save and load program data
+- Create, view, and delete bachelor programmes
+- Manage courses within each programme
+- Define course prerequisites and dependencies
+- Input validation and error handling
+- Modern, responsive user interface
 
-### Course Management
-- Course name and basic information
-- Credit allocation (1-30 credits)
-- Semester assignment (1-8)
-- Course type (Mandatory/Optional/Facultative)
+## Technical Stack
 
-### Data Management
-- MySQL or SQLite database support
-- Data validation and error handling
-- Transaction support for data integrity
+- Backend: PHP 7.4+ (no frameworks)
+- Database: MySQL 5.7+ with PDO
+- Frontend: HTML5, CSS3, and vanilla JavaScript (ES6+)
+- No external libraries or build tools required
 
-## Technical Requirements
+## Requirements
 
-### Backend
-- PHP 7.4 or higher
-- MySQL 5.7+ or SQLite3
-- PHP PDO extension enabled
-- PHP mysql extension (for MySQL)
-- PHP sqlite3 extension (for SQLite)
-
-### Frontend
+- PHP 7.4 or higher with PDO and MySQL extensions enabled
+- MySQL 5.7 or higher
+- Web server (Apache/Nginx) with mod_rewrite enabled
 - Modern web browser with JavaScript enabled
-- No additional plugins required
-
-## Database Setup Guide
-
-The application supports two database systems: SQLite (for development) and MySQL (for production). Here's how to set up each:
-
-### Option 1: SQLite (Recommended for Development)
-
-SQLite is the default and simplest option for development. It:
-- Requires no separate database server
-- Stores data in a single file
-- Works out of the box
-- Perfect for development and testing
-
-Setup steps:
-
-1. Create and set permissions for the database directory:
-```bash
-# On Linux/Mac:
-mkdir database
-chmod 777 database
-
-# On Windows (PowerShell):
-New-Item -ItemType Directory -Path database
-icacls database /grant Everyone:F
-```
-
-2. Verify PHP SQLite extensions:
-```bash
-php -m | grep sqlite
-# Should show pdo_sqlite
-```
-
-3. Start the development server:
-```bash
-php -S localhost:8000
-```
-
-The SQLite database will be automatically created at `database/program.db` when you first use the application.
-
-### Option 2: MySQL (Recommended for Production)
-
-MySQL is better suited for production environments as it:
-- Handles concurrent connections better
-- Provides better performance for larger datasets
-- Offers more advanced features
-- Has better backup and maintenance tools
-
-Setup steps:
-
-1. Local MySQL Setup:
-```sql
-CREATE DATABASE fmi_courses CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'fmi_user'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON fmi_courses.* TO 'fmi_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-2. Docker MySQL Setup (Alternative):
-```bash
-# Create network
-docker network create fmi-network
-
-# Start MySQL container
-docker run --name fmi-mysql \
-  -e MYSQL_ROOT_PASSWORD=root_password \
-  -e MYSQL_DATABASE=fmi_courses \
-  -e MYSQL_USER=fmi_user \
-  -e MYSQL_PASSWORD=your_password \
-  -p 3306:3306 \
-  --network fmi-network \
-  -d mysql:8.0
-```
-
-3. Update configuration in `config/database.php`:
-```php
-return [
-    'default' => 'mysql',  // Change from 'sqlite' to 'mysql'
-    'connections' => [
-        'mysql' => [
-            'type' => 'mysql',
-            'host' => 'localhost',  // or 'host.docker.internal' if using Docker
-            'port' => '3306',
-            'dbname' => 'fmi_courses',
-            'user' => 'fmi_user',
-            'password' => 'your_password'
-        ]
-    ]
-];
-```
-
-4. Start the server:
-```bash
-php -S localhost:8000
-```
-
-### Differences Between SQLite and MySQL
-
-| Feature | SQLite | MySQL |
-|---------|--------|-------|
-| Setup Complexity | Simple, no configuration needed | Requires server setup and configuration |
-| Performance | Good for small-to-medium datasets | Better for large datasets and concurrent users |
-| Concurrency | Limited concurrent write operations | Excellent concurrent operation handling |
-| Backup | Simple file copy | Requires proper backup procedures |
-| Use Case | Development, testing, small applications | Production, large applications |
-| Maintenance | Minimal | Requires regular maintenance |
-| Security | File-level permissions | User-based access control |
-
-### When to Use Each
-
-Use SQLite when:
-- Developing or testing the application
-- Running in a single-user environment
-- Need a simple, portable solution
-- Don't need advanced database features
-
-Use MySQL when:
-- Deploying to production
-- Expecting multiple concurrent users
-- Need better performance for large datasets
-- Require advanced database features
-- Need robust backup and recovery options
+- Composer (optional, for development)
 
 ## Installation and Setup
 
-1. Clone the repository:
+### 1. Clone the Repository
 ```bash
 git clone [repository-url]
-cd fmi-course-program-editor
+cd bachelor-curriculum-manager
 ```
 
-2. Create database directory and set permissions:
-```bash
-mkdir database
-chmod 777 database  # On Windows, ensure the directory is writable
-```
+### 2. Database Setup
 
-3. Database Setup:
-
-For SQLite (Default Development Setup):
-- The application will automatically create a SQLite database in the `database` directory
-- No additional configuration needed
-
-For MySQL:
-1. Create a new MySQL database:
+1. Create the MySQL database and user:
 ```sql
-CREATE DATABASE fmi_courses CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE curriculum_manager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'curriculum_user'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON curriculum_manager.* TO 'curriculum_user'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
-2. Update database configuration in `php/db.php`:
+2. Import the database schema:
+```bash
+mysql -u curriculum_user -p curriculum_manager < schema.sql
+```
+
+### 3. Configuration
+
+1. Update database credentials in `config/database.php`:
 ```php
-$config = [
-    'type' => 'mysql',
+return [
     'host' => 'localhost',
-    'dbname' => 'fmi_courses',
-    'username' => 'your_username',
-    'password' => 'your_password'
+    'dbname' => 'curriculum_manager',
+    'username' => 'curriculum_user',
+    'password' => 'your_password',
+    'charset' => 'utf8mb4'
 ];
 ```
 
-4. Start the PHP development server:
+2. Configure your web server:
+
+For Apache, ensure the following modules are enabled:
+```bash
+sudo a2enmod rewrite
+sudo a2enmod headers
+sudo service apache2 restart
+```
+
+Example Apache VirtualHost configuration:
+```apache
+<VirtualHost *:80>
+    ServerName curriculum.local
+    DocumentRoot /path/to/bachelor-curriculum-manager
+    
+    <Directory /path/to/bachelor-curriculum-manager>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    ErrorLog ${APACHE_LOG_DIR}/curriculum_error.log
+    CustomLog ${APACHE_LOG_DIR}/curriculum_access.log combined
+</VirtualHost>
+```
+
+### 4. File Permissions
+
+Set appropriate permissions:
+```bash
+# On Linux/Unix systems
+chmod -R 755 .
+chmod -R 777 logs    # Create this directory for error logs
+chown -R www-data:www-data .  # Use appropriate web server user
+```
+
+### 5. Running the Application
+
+For development:
 ```bash
 php -S localhost:8000
 ```
 
-5. Access the application:
-- Open your web browser and navigate to `http://localhost:8000`
-- The application will automatically create the necessary database tables on first run
+For production, access through your configured web server.
 
-## API Endpoints
+## Testing
 
-The application provides simple REST endpoints for managing program data:
+### Manual Testing
 
-### GET /php/load_program.php
-- Loads the most recent program data
-- Returns JSON with program details and courses
-- Example response:
-```json
-{
-    "success": true,
-    "program": {
-        "name": "Computer Science",
-        "type": "bachelor",
-        "courses": [
-            {
-                "name": "Mathematics",
-                "semester": 1,
-                "credits": 6,
-                "type": "mandatory"
-            }
-        ]
-    }
-}
+1. Programme Management Testing:
+```bash
+# Create a test programme
+curl -X POST http://localhost:8000/api/programmes.php \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Computer Science","years_to_study":3,"type":"full-time"}'
+
+# Get all programmes
+curl http://localhost:8000/api/programmes.php
+
+# Get specific programme
+curl http://localhost:8000/api/programmes.php?id=1
+
+# Delete programme
+curl -X DELETE http://localhost:8000/api/programmes.php?id=1
 ```
 
-### POST /php/save_program.php
-- Saves program data
-- Accepts JSON with program details and courses
-- Example request body:
-```json
-{
-    "name": "Computer Science",
-    "type": "bachelor",
-    "courses": [
-        {
-            "name": "Mathematics",
-            "semester": 1,
-            "credits": 6,
-            "type": "mandatory"
-        }
-    ]
-}
+2. Course Management Testing:
+```bash
+# Create a course
+curl -X POST "http://localhost:8000/api/courses.php?programme_id=1" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Programming 101","credits":6,"available_year":1,"description":"Intro to programming"}'
+
+# Get course details
+curl "http://localhost:8000/api/courses.php?programme_id=1&id=1"
+
+# Delete course
+curl -X DELETE "http://localhost:8000/api/courses.php?programme_id=1&id=1"
 ```
-- Returns success/error status
 
-## Usage
+### Automated Testing
 
-1. Create a New Program:
-   - Click "Нова програма" or use Ctrl+N
-   - Enter program name and type
-   - Add courses and their details
+Create a new directory `tests` and add PHPUnit tests:
 
-2. Add Courses:
-   - Click "Добави дисциплина"
-   - Fill in course details:
-     - Name (unique)
-     - Semester (1-8)
-     - Credits (1-30)
-     - Type (Mandatory/Optional/Facultative)
-   - Click "Премахни" to remove a course
+```bash
+# Install PHPUnit (if using Composer)
+composer require --dev phpunit/phpunit
 
-3. Save/Load Programs:
-   - Click "Запази" or use Ctrl+S to save
-   - Click "Зареди програма" or use Ctrl+O to load
-
-## Project Structure
-
+# Run tests
+./vendor/bin/phpunit tests
 ```
-/
-├── css/
-│   └── style.css          # Application styles
-├── js/
-│   └── app.js            # Main application logic
-├── php/
-│   ├── db.php           # Database configuration and utilities
-│   ├── load_program.php # Program loading endpoint
-│   └── save_program.php # Program saving endpoint
-├── database/            # SQLite database directory
-└── index.php           # Main application page
+
+Example test structure:
 ```
+tests/
+├── Unit/
+│   ├── ProgrammeTest.php
+│   └── CourseTest.php
+└── Integration/
+    ├── ProgrammeApiTest.php
+    └── CourseApiTest.php
+```
+
+## Known Issues and Limitations
+
+### Security
+1. No authentication/authorization system
+2. CORS settings are too permissive
+3. No rate limiting on API endpoints
+4. No input sanitization for HTML content
+
+### Database
+1. No connection pooling for high concurrency
+2. No database migration system
+3. No query optimization for large datasets
+4. No soft delete functionality
+
+### Frontend
+1. No loading states during API calls
+2. No offline support
+3. No pagination UI for large lists
+4. Limited error handling for network failures
+
+### Business Logic
+1. No maximum limit on course prerequisites
+2. No validation for complex circular dependencies
+3. No support for course credit requirements per year
+4. No validation for total programme credits
 
 ## Troubleshooting
 
-1. Database Issues:
-   - Ensure the `database` directory exists and is writable
-   - For MySQL, verify the connection settings in `php/db.php`
-   - Check PHP error logs for detailed error messages
+### Common Issues
 
-2. Permission Issues:
-   - On Linux/Mac: `chmod 777 database`
-   - On Windows: Right-click > Properties > Security > Edit > Add > Everyone > Full Control
+1. Database Connection Errors:
+   - Verify MySQL service is running
+   - Check credentials in config/database.php
+   - Ensure MySQL user has correct privileges
 
-3. Server Issues:
-   - Ensure PHP is installed and in your system PATH
-   - Check if required PHP extensions are enabled (pdo, pdo_mysql, pdo_sqlite)
-   - Verify the port 8000 is not in use by another application 
+2. API Endpoint Errors:
+   - Check PHP error logs in logs/php_errors.log
+   - Verify .htaccess is properly configured
+   - Ensure mod_rewrite is enabled
+
+3. Frontend Issues:
+   - Clear browser cache
+   - Check browser console for JavaScript errors
+   - Verify Content-Security-Policy headers
+
+### Debug Mode
+
+To enable debug mode, modify `config/database.php`:
+```php
+return [
+    // ... existing config ...
+    'debug' => true  // Add this line
+];
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Write tests for new features
+4. Ensure all tests pass
+5. Submit a pull request
+
+## Future Improvements
+
+1. Add authentication and user roles
+2. Implement course editing functionality
+3. Add programme statistics and reporting
+4. Create data export/import features
+5. Add automated testing suite
+6. Implement soft delete functionality
+7. Add database migrations
+8. Improve error handling and logging
+9. Add API documentation using OpenAPI/Swagger
+10. Implement frontend state management
+
+## License
+
+This project is licensed under the MIT License. 
