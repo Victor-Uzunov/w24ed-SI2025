@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление на учебни програми</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Управление на учебни програми</h1>
+            <nav>
+                <button class="tab-btn active" data-tab="programs">Програми</button>
+                <button class="tab-btn" data-tab="courses">Дисциплини</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Programs Tab -->
+            <div id="programsTab" class="tab-content active">
+                <div class="actions">
+                    <button id="newProgramBtn" class="primary-btn">
+                        <span>+</span> Нова програма
+                    </button>
+                </div>
+
+                <div id="noProgramsMessage" class="no-content-message" style="display: none;">
+                    <div class="message-content">
+                        <div class="message-icon">📋</div>
+                        <h3>Няма създадени програми</h3>
+                        <p>Натиснете бутона "Нова програма" за да създадете първата програма.</p>
+                    </div>
+                </div>
+
+                <div id="programsContainer" class="programs-list"></div>
+            </div>
+
+            <!-- Courses Tab -->
+            <div id="coursesTab" class="tab-content">
+                <div id="allCoursesContainer"></div>
+            </div>
+        </main>
+
+        <!-- Program Dialog -->
+        <div id="programDialog" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="programDialogTitle">Създаване на нова програма</h2>
+                    <button class="close-modal" id="closeDialog">×</button>
+                </div>
+                <form id="programBasicForm">
+                    <input type="hidden" id="programId" name="programId" value="">
+                    <div class="form-group">
+                        <label for="name">Име на програмата</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="years_to_study">Години на обучение</label>
+                        <select id="years_to_study" name="years_to_study" required>
+                            <option value="">Изберете години</option>
+                            <option value="3">3 години</option>
+                            <option value="4">4 години</option>
+                            <option value="5">5 години</option>
+                            <option value="6">6 години</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="type">Форма на обучение</label>
+                        <select id="type" name="type" required>
+                            <option value="">Изберете форма</option>
+                            <option value="full-time">Редовно</option>
+                            <option value="part-time">Задочно</option>
+                            <option value="distance">Дистанционно</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="degree">Образователна степен</label>
+                        <select id="degree" name="degree" required>
+                            <option value="">Изберете степен</option>
+                            <option value="bachelor">Бакалавър</option>
+                            <option value="master">Магистър</option>
+                        </select>
+                    </div>
+                    <div class="button-group">
+                        <button type="button" class="cancel-btn" id="cancelProgram">Отказ</button>
+                        <button type="submit" class="save-btn">Запази</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html> 
