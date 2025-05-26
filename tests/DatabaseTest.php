@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace App\Tests;
 
 use PHPUnit\Framework\TestCase;
 use App\Database;
@@ -16,6 +16,24 @@ class DatabaseTest extends TestCase
             'in_memory' => true
         ];
         $this->db = Database::getInstance($config);
+        
+        // Create test schema
+        $connection = $this->db->getConnection();
+        $connection->exec("
+            CREATE TABLE IF NOT EXISTS programs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                type TEXT NOT NULL,
+                degree TEXT DEFAULT 'bachelor',
+                years_to_study INTEGER DEFAULT 4
+            )
+        ");
+    }
+
+    protected function tearDown(): void
+    {
+        $connection = $this->db->getConnection();
+        $connection->exec("DROP TABLE IF EXISTS programs");
     }
 
     public function testDatabaseConnection()

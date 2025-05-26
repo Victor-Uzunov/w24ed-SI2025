@@ -8,8 +8,16 @@ use PDOException;
 class Database {
     private static $instance = null;
     private $pdo;
+    private $isInMemory = false;
 
-    private function __construct() {
+    private function __construct($config = null) {
+        if ($config && isset($config['in_memory']) && $config['in_memory']) {
+            $this->pdo = new PDO('sqlite::memory:');
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->isInMemory = true;
+            return;
+        }
+
         $config = require __DIR__ . '/../config/database.php';
         
         try {
@@ -37,15 +45,35 @@ class Database {
         }
     }
 
-    public static function getInstance() {
+    public static function getInstance($config = null) {
         if (self::$instance === null) {
-            self::$instance = new self();
+            self::$instance = new self($config);
         }
         return self::$instance;
     }
 
     public function getConnection() {
         return $this->pdo;
+    }
+
+    public function isInMemory() {
+        return $this->isInMemory;
+    }
+
+    public function getDbType() {
+        return $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    }
+
+    public function beginTransaction() {
+        return $this->pdo->beginTransaction();
+    }
+
+    public function commit() {
+        return $this->pdo->commit();
+    }
+
+    public function rollBack() {
+        return $this->pdo->rollBack();
     }
 
     private function createTables() {
