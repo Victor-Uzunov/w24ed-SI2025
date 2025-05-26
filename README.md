@@ -1,152 +1,137 @@
-# FMI Course Program Editor and Dependency Visualizer
+# Educational Programs Management System
 
-A web application for creating and managing university course programs at FMI. This application allows faculty administrators and program coordinators to manage course dependencies and create visual representations of curriculum structures.
+A modern web application for managing educational programs and courses, built with PHP 8.1+ backend and JavaScript frontend.
 
 ## Features
 
-### Core Functionality
-- Create and edit course programs for Bachelor's and Master's degrees
-- Add, edit, and remove courses with detailed information
-- Manage course dependencies through an interactive graph
-- Save and load program data
-- Visualize course dependencies in an interactive graph
+- Program Management
+  - Create, read, update, and delete educational programs
+  - Support for different program types (full-time, part-time, distance)
+  - Support for different degrees (bachelor, master)
+  - Configurable study duration
 
-### Course Management
-- Course name and basic information
-- Credit allocation (1-30 credits)
-- Semester assignment (1-8)
-- Course type (Mandatory/Optional/Facultative)
-- Prerequisites and dependencies with validation
+- Course Management
+  - Create, read, update, and delete courses within programs
+  - Course dependencies management
+  - Credit system support
+  - Year-based course organization
 
-### Visualization
-- Interactive dependency graph with drag-and-drop support
-- Visual representation of course relationships
-- Semester-based course organization
-- Color-coded course types
-- Dynamic graph layout
-- Zoom and pan controls
+- Multi-language Support
+  - Full Bulgarian language interface
+  - Extensible translation system
 
-### Data Management
-- MySQL or SQLite database support
-- Data validation and error handling
-- Transaction support for data integrity
-- Dependency validation to prevent circular references
-
-## Technical Requirements
+## Technical Stack
 
 ### Backend
-- PHP 7.4 or higher
-- MySQL 5.7+ or SQLite3
-- PHP PDO extension enabled
-- PHP mysql extension (for MySQL)
-- PHP sqlite3 extension (for SQLite)
+- PHP 8.1+
+- MySQL/SQLite with PDO
+- RESTful API architecture
+- PSR-12 coding standards
+- PHPUnit for testing
+- PHPStan for static analysis
 
 ### Frontend
-- Modern web browser with JavaScript enabled
-- Support for SVG graphics
-- No additional plugins required
+- Vanilla JavaScript (ES6+)
+- Modern CSS3
+- Responsive design
+- No external dependencies
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
-cd fmi-course-program-editor
+git clone https://github.com/yourusername/w24ed-SI2025.git
+cd w24ed-SI2025
 ```
 
-2. Ensure proper permissions for the database directory:
+2. Install dependencies:
 ```bash
-chmod 777 database
+composer install
 ```
 
-3. Start the PHP development server:
+3. Configure your web server:
+   - Point the document root to the `public` directory
+   - Ensure `.htaccess` is enabled for Apache
+   - For Nginx, configure URL rewriting similar to the Apache configuration
+
+4. Set up the database:
+   - Create a new database
+   - Import the schema from `database/migrations`
+   - Copy `.env.example` to `.env` and configure your database connection
+
+5. Set appropriate permissions:
 ```bash
-php -S localhost:8000
+chmod -R 755 public/
+chmod -R 777 storage/logs/
 ```
-
-## Database Configuration
-
-The application supports both MySQL and SQLite databases. By default, it uses SQLite for development. To configure MySQL:
-
-1. Open `php/db.php`
-2. Update the database configuration:
-```php
-$config = [
-    'type' => 'mysql',
-    'host' => 'localhost',
-    'dbname' => 'your_database',
-    'username' => 'your_username',
-    'password' => 'your_password'
-];
-```
-
-## API Endpoints
-
-The application provides simple REST endpoints for managing program data:
-
-### GET /php/load_program.php
-- Loads the most recent program data
-- Returns JSON with program details, courses, and dependencies
-
-### POST /php/save_program.php
-- Saves program data
-- Accepts JSON with program details, courses, and dependencies
-- Validates dependencies and data integrity
-- Returns success/error status
-
-## Usage
-
-1. Create a New Program:
-   - Click "Нова програма" or use Ctrl+N
-   - Enter program name and type
-   - Add courses and their details
-
-2. Add Courses:
-   - Click "Добави дисциплина"
-   - Fill in course details (name, semester, credits, type)
-   - Credits must be between 1 and 30
-   - Choose course type
-
-3. Manage Dependencies:
-   - Hold Shift and click two courses to create a dependency
-   - Dependencies must follow semester order
-   - Circular dependencies are prevented
-   - Right-click a dependency line to remove it
-   - Drag courses to rearrange the graph
-   - Use zoom controls to adjust the view
-
-4. Save/Load Programs:
-   - Click "Запази" or use Ctrl+S to save
-   - Click "Зареди програма" or use Ctrl+O to load
 
 ## Development
 
-The codebase is organized as follows:
+### Code Style
+The project follows PSR-12 coding standards. To check and fix code style:
 
+```bash
+# Check code style
+composer cs
+
+# Fix code style automatically
+composer cs-fix
 ```
-/
-├── css/
-│   └── style.css          # Application styles
-├── js/
-│   ├── app.js            # Main application logic
-│   └── graph.js          # Dependency graph visualization
-├── php/
-│   ├── db.php           # Database configuration and utilities
-│   ├── load_program.php # Program loading endpoint
-│   └── save_program.php # Program saving endpoint
-└── index.php            # Main application page
+
+### Static Analysis
+Run PHPStan for static analysis:
+
+```bash
+composer phpstan
 ```
+
+### Testing
+Run the test suite:
+
+```bash
+composer test
+```
+
+### All Quality Checks
+Run all quality checks at once:
+
+```bash
+composer check
+```
+
+## API Documentation
+
+### Programs Endpoints
+
+- `GET /api/programmes` - List all programs
+- `GET /api/programmes/{id}` - Get program details
+- `POST /api/programmes` - Create new program
+- `PUT /api/programmes/{id}` - Update program
+- `DELETE /api/programmes/{id}` - Delete program
+
+### Courses Endpoints
+
+- `GET /api/courses` - List all courses
+- `GET /api/courses/{id}` - Get course details
+- `GET /api/programmes/{id}/courses` - List courses in program
+- `POST /api/courses` - Create new course
+- `PUT /api/courses/{id}` - Update course
+- `DELETE /api/courses/{id}` - Delete course
+
+For detailed API documentation, see the [API Documentation](docs/api.md).
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Acknowledgments
+## License
 
-- FMI for the program structure requirements
-- TCPDF for PDF generation
-- MySQL and SQLite for database management 
+This project is proprietary software. All rights reserved.
+
+## Support
+
+For support, please contact the development team or open an issue in the repository.

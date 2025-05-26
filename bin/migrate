@@ -1,0 +1,53 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Core\Database;
+use App\Core\Migration;
+
+// Load environment variables
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
+
+$db = Database::getInstance()->getConnection();
+$migration = new Migration($db);
+
+// Parse command line arguments
+$command = $argv[1] ?? 'migrate';
+$steps = isset($argv[2]) ? (int) $argv[2] : 1;
+
+try {
+    switch ($command) {
+        case 'migrate':
+            $applied = $migration->migrate();
+            if (empty($applied)) {
+                echo "No new migrations to apply.\n";
+            } else {
+                echo "Applied migrations:\n";
+                foreach ($applied as $m) {
+                    echo "- {$m}\n";
+                }
+            }
+            break;
+
+        case 'rollback':
+            $rolledBack = $migration->rollback($steps);
+            if (empty($rolledBack)) {
+                echo "No migrations to roll back.\n";
+            } else {
+                echo "Rolled back migrations:\n";
+                foreach ($rolledBack as $m) {
+                    echo "- {$m}\n";
+                }
+            }
+            break;
+
+        default:
+            echo "Unknown command. Use 'migrate' or 'rollback'.\n";
+            exit(1);
+    }
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+    exit(1);
+} 
