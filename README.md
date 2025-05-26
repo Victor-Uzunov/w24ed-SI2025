@@ -1,162 +1,137 @@
-# Система за управление на учебни програми и дисциплини
+# Educational Programs Management System
 
-Уеб приложение за управление на учебни програми и техните дисциплини, разработено с JavaScript, HTML и CSS.
+A modern web application for managing educational programs and courses, built with PHP 8.1+ backend and JavaScript frontend.
 
-## Функционалности
+## Features
 
-### Управление на програми
+- Program Management
+  - Create, read, update, and delete educational programs
+  - Support for different program types (full-time, part-time, distance)
+  - Support for different degrees (bachelor, master)
+  - Configurable study duration
 
-- **Създаване на програма**
-  - Име на програмата
-  - Образователна степен (Бакалавър/Магистър)
-  - Години на обучение (3-6)
-  - Форма на обучение (Редовно/Задочно/Дистанционно)
+- Course Management
+  - Create, read, update, and delete courses within programs
+  - Course dependencies management
+  - Credit system support
+  - Year-based course organization
 
-- **Редактиране на програма**
-  - Промяна на всички параметри
-  - Незабавно обновяване на интерфейса
-  - Валидация на въведените данни
+- Multi-language Support
+  - Full Bulgarian language interface
+  - Extensible translation system
 
-- **Изтриване на програма**
-  - Потвърждение преди изтриване
-  - Автоматично изтриване на свързаните дисциплини
-  - Анимиран преход при премахване
+## Technical Stack
 
-### Управление на дисциплини
+### Backend
+- PHP 8.1+
+- MySQL/SQLite with PDO
+- RESTful API architecture
+- PSR-12 coding standards
+- PHPUnit for testing
+- PHPStan for static analysis
 
-- **Създаване на дисциплина**
-  - Име на дисциплината
-  - Брой кредити (1-9)
-  - Година на изучаване
-  - Избор на програма
-  - Зависимости от други дисциплини
+### Frontend
+- Vanilla JavaScript (ES6+)
+- Modern CSS3
+- Responsive design
+- No external dependencies
 
-- **Редактиране на дисциплина**
-  - Промяна на всички параметри
-  - Запазване на програмата
-  - Валидация на зависимостите
+## Installation
 
-- **Изтриване на дисциплина**
-  - Потвърждение преди изтриване
-  - Анимиран преход при премахване
-  - Автоматично обновяване на списъка
-
-### Потребителски интерфейс
-
-- **Табове за навигация**
-  - Програми
-  - Дисциплини
-
-- **Списък с програми**
-  - Показване на основна информация
-  - Бутони за редактиране и изтриване
-  - Бутон за добавяне на дисциплини
-
-- **Списък с дисциплини**
-  - Групиране по програми
-  - Показване на детайлна информация
-  - Бутони за редактиране и изтриване
-
-### Съобщения и валидация
-
-- **Успешни операции**
-  - Анимирани съобщения
-  - Автоматично скриване след 3 секунди
-  - Зелен цвят за успех
-
-- **Съобщения за грешки**
-  - Информативни съобщения
-  - Задържане до следващо действие
-  - Неутрален сив цвят
-
-- **Валидация на данни**
-  - Проверка на задължителни полета
-  - Валидация на диапазони
-  - Проверка на зависимости
-
-## Технически детайли
-
-### API Endpoints
-
-- **Програми**
-  - GET `/api/programmes` - Списък с програми
-  - POST `/api/programmes` - Създаване на програма
-  - PUT `/api/programmes/:id` - Обновяване на програма
-  - DELETE `/api/programmes/:id` - Изтриване на програма
-
-- **Дисциплини**
-  - GET `/api/programmes/:id/courses` - Списък с дисциплини за програма
-  - POST `/api/programmes/:id/courses` - Създаване на дисциплина
-  - PUT `/api/programmes/:id/courses/:courseId` - Обновяване на дисциплина
-  - DELETE `/api/programmes/:id/courses/:courseId` - Изтриване на дисциплина
-
-### Структура на данните
-
-- **Програма**
-```javascript
-{
-    id: number,
-    name: string,
-    degree: "bachelor" | "master",
-    years_to_study: number,
-    type: "full-time" | "part-time" | "distance"
-}
-```
-
-- **Дисциплина**
-```javascript
-{
-    id: number,
-    name: string,
-    credits: number,
-    year_available: number,
-    description: string,
-    depends_on: number[]
-}
-```
-
-### Анимации
-
-- Плавно появяване на нови елементи
-- Плавно изчезване при изтриване
-- Анимирани съобщения за успех/грешка
-- Плавни преходи при hover ефекти
-
-### Валидация на данни
-
-- **Програма**
-  - Име: задължително
-  - Години: 3-6
-  - Степен: бакалавър/магистър
-  - Тип: редовно/задочно/дистанционно
-
-- **Дисциплина**
-  - Име: задължително
-  - Кредити: 1-9
-  - Година: задължително
-  - Програма: задължително
-  - Зависимости: валидни ID-та
-
-## Инсталация и стартиране
-
-1. Клониране на хранилището:
+1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone https://github.com/yourusername/w24ed-SI2025.git
+cd w24ed-SI2025
 ```
 
-2. Отваряне на `index.html` в браузър или стартиране на локален сървър:
+2. Install dependencies:
 ```bash
-python -m http.server 8000
+composer install
 ```
 
-3. Достъп до приложението:
-```
-http://localhost:8000
+3. Configure your web server:
+   - Point the document root to the `public` directory
+   - Ensure `.htaccess` is enabled for Apache
+   - For Nginx, configure URL rewriting similar to the Apache configuration
+
+4. Set up the database:
+   - Create a new database
+   - Import the schema from `database/migrations`
+   - Copy `.env.example` to `.env` and configure your database connection
+
+5. Set appropriate permissions:
+```bash
+chmod -R 755 public/
+chmod -R 777 storage/logs/
 ```
 
-## Бележки за разработчици
+## Development
 
-- Използвайте съвременен браузър с поддръжка на ES6+
-- Приложението използва нативен JavaScript без външни библиотеки
-- Поддържа се responsive дизайн за различни екрани
-- Следвайте установените стилове за код и именуване 
+### Code Style
+The project follows PSR-12 coding standards. To check and fix code style:
+
+```bash
+# Check code style
+composer cs
+
+# Fix code style automatically
+composer cs-fix
+```
+
+### Static Analysis
+Run PHPStan for static analysis:
+
+```bash
+composer phpstan
+```
+
+### Testing
+Run the test suite:
+
+```bash
+composer test
+```
+
+### All Quality Checks
+Run all quality checks at once:
+
+```bash
+composer check
+```
+
+## API Documentation
+
+### Programs Endpoints
+
+- `GET /api/programmes` - List all programs
+- `GET /api/programmes/{id}` - Get program details
+- `POST /api/programmes` - Create new program
+- `PUT /api/programmes/{id}` - Update program
+- `DELETE /api/programmes/{id}` - Delete program
+
+### Courses Endpoints
+
+- `GET /api/courses` - List all courses
+- `GET /api/courses/{id}` - Get course details
+- `GET /api/programmes/{id}/courses` - List courses in program
+- `POST /api/courses` - Create new course
+- `PUT /api/courses/{id}` - Update course
+- `DELETE /api/courses/{id}` - Delete course
+
+For detailed API documentation, see the [API Documentation](docs/api.md).
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is proprietary software. All rights reserved.
+
+## Support
+
+For support, please contact the development team or open an issue in the repository.
